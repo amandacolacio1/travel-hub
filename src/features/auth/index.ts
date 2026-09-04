@@ -1,4 +1,4 @@
-export { AuthHero } from "./components/auth-hero";
+export { AuthPage } from "./components/auth-page";
 export { AuthIcon } from "./components/auth-icon";
 export { ComponentsShowcase } from "./components/components-showcase";
 export { InterestCard } from "./components/interest-card";

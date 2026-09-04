@@ -2,4 +2,4 @@ export { Button } from "./button";
 export { Input } from "./input";
 export { Label } from "./label";
 export { Select } from "./select";
-export { Slider } from "./slider";
+export { CurrencyInput } from "./currency-input";

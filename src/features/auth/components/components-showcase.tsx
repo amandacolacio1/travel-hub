@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Input, Select, Slider } from "@/shared/components/ui";
+import { Button, CurrencyInput, Input, Select } from "@/shared/components/ui";
 import { INTERESSES } from "../constants/interesses";
 import { PERFIS_VIAGEM } from "../constants/perfis-viagem";
 import { DESTINOS } from "../constants/destinos";
@@ -16,7 +16,7 @@ export function ComponentsShowcase() {
   const [step, setStep] = useState(1);
   const [interesses, setInteresses] = useState<string[]>(["natureza"]);
   const [perfil, setPerfil] = useState<PerfilViagem>("sozinho");
-  const [orcamento, setOrcamento] = useState(5000);
+  const [orcamento, setOrcamento] = useState(8000);
   const [pais, setPais] = useState("Brasil");
 
   const cidades =
@@ -60,21 +60,28 @@ export function ComponentsShowcase() {
       <section className="flex flex-col gap-4">
         <h2 className="text-xl text-ink">Botões</h2>
         <div className="flex flex-col gap-3">
-          <Button>
+          <Button variant="primary">
             Primário
             <AuthIcon name="arrow" className="h-4 w-4" />
           </Button>
+          <Button variant="primary" disabled>
+            Primário disabled
+            <AuthIcon name="arrow" className="h-4 w-4" />
+          </Button>
           <Button variant="secondary">Secundário</Button>
+          <Button variant="secondary" disabled>
+            Secundário disabled
+          </Button>
           <Button variant="ghost">Ghost</Button>
+          <Button variant="ghost" disabled>
+            Ghost disabled
+          </Button>
         </div>
       </section>
 
       <section className="flex flex-col gap-4">
         <h2 className="text-xl text-ink">Campos</h2>
-        <Input
-          label="Nome completo"
-          placeholder="Como deseja ser chamado?"
-        />
+        <Input label="Nome completo" placeholder="Como deseja ser chamado?" />
         <Input
           label="E-mail"
           type="email"
@@ -92,21 +99,13 @@ export function ComponentsShowcase() {
               label: item.nome,
             }))}
           />
-          <Select
-            label="Cidade"
-            placeholder="Cidade"
-            options={cidades}
-          />
+          <Select label="Cidade" placeholder="Cidade" options={cidades} />
         </div>
-        <Slider
-          label="Orçamento inicial (R$)"
-          min={1000}
-          max={50000}
-          step={500}
+        <CurrencyInput
+          label="Orçamento inicial"
           value={orcamento}
           onChange={setOrcamento}
-          minLabel="R$ 1k"
-          maxLabel="R$ 50k+"
+          placeholder="0"
         />
       </section>
 

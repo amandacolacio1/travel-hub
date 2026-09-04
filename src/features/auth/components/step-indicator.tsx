@@ -20,7 +20,7 @@ export function StepIndicator({ current, total = 3 }: StepIndicatorProps) {
         return (
           <span
             key={step}
-            className={`h-1 flex-1 max-w-16 rounded-full transition-colors ${
+            className={`h-1 flex-1 max-w-32 rounded-full transition-colors ${
               isActive ? "bg-brand-500" : "bg-surface-600"
             }`}
           />

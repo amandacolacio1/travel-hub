@@ -27,7 +27,7 @@ export function InterestCard({ option, selected, onToggle }: InterestCardProps) 
         <AuthIcon name={option.icon} className="h-4 w-4" />
       </span>
       <span className="min-w-0">
-        <span className="block text-sm font-semibold">{option.titulo}</span>
+        <span className="block font-sans text-sm font-semibold">{option.titulo}</span>
         <span
           className={`mt-0.5 block text-xs leading-snug ${
             selected ? "text-paper/75" : "text-text-muted-400"

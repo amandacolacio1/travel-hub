@@ -72,6 +72,9 @@
 
   --font-sans: var(--font-inter);
   --font-serif: var(--font-fraunces);
+
+  --default-font-family: var(--font-sans);
+  --default-border-color: var(--color-surface-600);
 }
 
 body {
@@ -85,30 +88,4 @@ h2,
 h3,
 h4 {
   font-family: var(--font-serif), Georgia, serif;
-}
-
-.auth-slider {
-  height: 6px;
-  border-radius: 999px;
-}
-
-.auth-slider::-webkit-slider-thumb {
-  appearance: none;
-  width: 18px;
-  height: 18px;
-  border-radius: 999px;
-  background: var(--color-brand-500);
-  border: 2px solid var(--color-paper);
-  box-shadow: 0 1px 3px rgb(0 0 0 / 20%);
-  cursor: pointer;
-}
-
-.auth-slider::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
-  border-radius: 999px;
-  background: var(--color-brand-500);
-  border: 2px solid var(--color-paper);
-  box-shadow: 0 1px 3px rgb(0 0 0 / 20%);
-  cursor: pointer;
 }
