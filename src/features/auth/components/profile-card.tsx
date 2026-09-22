@@ -1,9 +1,9 @@
 import { AuthIcon } from "./auth-icon";
-import type { PerfilOption } from "../constants/perfis-viagem";
+import type { ProfileOption } from "../constants/travel-profiles";
 import type { PerfilViagem } from "../types/auth";
 
 type ProfileCardProps = {
-  option: PerfilOption;
+  option: ProfileOption;
   selected: boolean;
   onSelect: (id: PerfilViagem) => void;
 };
@@ -14,7 +14,7 @@ export function ProfileCard({ option, selected, onSelect }: ProfileCardProps) {
       type="button"
       onClick={() => onSelect(option.id)}
       aria-pressed={selected}
-      className={`flex w-full items-center gap-3 rounded-xl border bg-paper p-4 text-left transition-colors ${
+      className={`flex w-full cursor-pointer items-center gap-3 rounded-xl border bg-paper p-4 text-left transition-colors ${
         selected
           ? "border-2 border-brand-500"
           : "border-surface-600 hover:border-brand-300"

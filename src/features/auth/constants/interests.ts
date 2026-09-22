@@ -1,11 +1,11 @@
-export type InteresseOption = {
+export type InterestOption = {
   id: string;
   titulo: string;
   descricao: string;
   icon: "natureza" | "cultura" | "gastronomia" | "familia" | "romance" | "economia";
 };
 
-export const INTERESSES: InteresseOption[] = [
+export const INTERESTS: InterestOption[] = [
   {
     id: "natureza",
     titulo: "Natureza",

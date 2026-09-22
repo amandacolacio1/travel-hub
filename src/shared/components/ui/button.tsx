@@ -29,7 +29,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         type={type}
-        className={`inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3.5 font-sans text-sm font-medium transition-colors disabled:cursor-not-allowed ${variantClasses[variant]} ${className}`}
+        className={`inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg px-4 py-3.5 font-sans text-sm font-medium transition-colors disabled:cursor-not-allowed ${variantClasses[variant]} ${className}`}
         {...props}
       >
         {children}

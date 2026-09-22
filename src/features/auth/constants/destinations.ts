@@ -1,10 +1,10 @@
-export type PaisOption = {
+export type CountryOption = {
   codigo: string;
   nome: string;
   cidades: string[];
 };
 
-export const DESTINOS: PaisOption[] = [
+export const DESTINATIONS: CountryOption[] = [
   {
     codigo: "BR",
     nome: "Brasil",
@@ -37,6 +37,6 @@ export const DESTINOS: PaisOption[] = [
   },
 ];
 
-export const ORCAMENTO_MIN = 1000;
-export const ORCAMENTO_MAX = 50000;
-export const MAX_DESTINOS = 4;
+export const BUDGET_MIN = 1000;
+export const BUDGET_MAX = 50000;
+export const MAX_DESTINATIONS = 4;

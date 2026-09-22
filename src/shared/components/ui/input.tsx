@@ -5,10 +5,11 @@ type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   label?: string;
   error?: string;
   startAdornment?: ReactNode;
+  endAdornment?: ReactNode;
 };
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
-  { className = "", label, error, id, startAdornment, ...props },
+  { className = "", label, error, id, startAdornment, endAdornment, ...props },
   ref,
 ) {
   const inputId = id ?? props.name;
@@ -20,7 +21,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
     <div className="w-full">
       {label ? <Label htmlFor={inputId}>{label}</Label> : null}
 
-      {startAdornment ? (
+      {startAdornment || endAdornment ? (
         <div
           className={`flex w-full items-center gap-2 rounded-lg border bg-paper px-3.5 py-3 transition-colors ${fieldClasses} ${className}`}
         >
@@ -31,6 +32,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
             className="min-w-0 flex-1 bg-transparent font-sans text-sm text-ink outline-none placeholder:text-text-muted-400"
             {...props}
           />
+          {endAdornment}
         </div>
       ) : (
         <input

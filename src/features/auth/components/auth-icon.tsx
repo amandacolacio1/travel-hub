@@ -3,6 +3,8 @@ import {
   Calendar,
   Check,
   CircleDollarSign,
+  Eye,
+  EyeOff,
   Heart,
   Landmark,
   Leaf,
@@ -22,16 +24,22 @@ export type AuthIconName =
   | "sozinho"
   | "casal"
   | "google"
+  | "apple"
   | "arrow"
   | "check"
-  | "calendar";
+  | "calendar"
+  | "eye"
+  | "eyeOff";
 
 type IconProps = {
   name: AuthIconName;
   className?: string;
 };
 
-const lucideIcons: Record<Exclude<AuthIconName, "google">, LucideIcon> = {
+const lucideIcons: Record<
+  Exclude<AuthIconName, "google" | "apple">,
+  LucideIcon
+> = {
   natureza: Leaf,
   cultura: Landmark,
   gastronomia: UtensilsCrossed,
@@ -43,6 +51,8 @@ const lucideIcons: Record<Exclude<AuthIconName, "google">, LucideIcon> = {
   arrow: ArrowRight,
   check: Check,
   calendar: Calendar,
+  eye: Eye,
+  eyeOff: EyeOff,
 };
 
 function GoogleMark({ className = "h-5 w-5" }: { className?: string }) {
@@ -73,9 +83,27 @@ function GoogleMark({ className = "h-5 w-5" }: { className?: string }) {
   );
 }
 
+function AppleMark({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      className={className}
+      fill="currentColor"
+      aria-hidden
+    >
+      <path d="M16.365 1.43c0 1.14-.464 2.095-1.14 2.79-.734.76-1.938 1.35-2.94 1.27-.13-1.09.42-2.22 1.09-2.92.73-.76 2-1.32 2.99-1.14zM20.94 17.19c-.6 1.38-1.32 2.72-2.4 3.9-1.03 1.13-2.1 2.24-3.65 2.27-1.51.03-2-.86-3.73-.86-1.73 0-2.27.83-3.7.89-1.5.06-2.65-1.22-3.68-2.35C1.6 18.62.03 14.07 1.24 10.86c.6-1.58 1.7-2.87 3.12-3.66 1.26-.7 2.68-.87 3.94-.32 1 .43 1.87.65 2.63.65.7 0 1.84-.5 3.1-.43 1.07.05 2.63.4 3.86 1.58-3.4 1.99-2.84 7.05.05 8.51z" />
+    </svg>
+  );
+}
+
 export function AuthIcon({ name, className = "h-5 w-5" }: IconProps) {
   if (name === "google") {
     return <GoogleMark className={className} />;
+  }
+
+  if (name === "apple") {
+    return <AppleMark className={className} />;
   }
 
   const Icon = lucideIcons[name];

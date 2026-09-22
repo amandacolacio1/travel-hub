@@ -1,6 +1,9 @@
-export { AuthPage } from "./components/auth-page";
+export { AuthContainer } from "./components/auth-container";
 export { AuthIcon } from "./components/auth-icon";
-export { ComponentsShowcase } from "./components/components-showcase";
+export { RegistrationWizard } from "./components/registration-wizard";
+export { AccountStep } from "./components/account-step";
+export { PreferencesStep } from "./components/preferences-step";
+export { TravelProfileStep } from "./components/travel-profile-step";
 export { InterestCard } from "./components/interest-card";
 export { ProfileCard } from "./components/profile-card";
 export { SocialAuth } from "./components/social-auth";

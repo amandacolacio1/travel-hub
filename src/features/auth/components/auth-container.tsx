@@ -1,11 +1,11 @@
 import Image from "next/image";
 import { homeBanner } from "../assets";
-import { ComponentsShowcase } from "./components-showcase";
+import { RegistrationWizard } from "./registration-wizard";
 
-export function AuthPage() {
+export function AuthContainer() {
   return (
-    <div className="flex min-h-dvh flex-col gap-24 bg-background lg:flex-row">
-      <aside className="order-1 w-full shrink-0 lg:sticky lg:top-0 lg:h-dvh lg:w-[40%]">
+    <div className="flex min-h-dvh flex-col gap-48 bg-background lg:flex-row items-center justify-center">
+      <aside className="order-1 w-full shrink-0 lg:sticky lg:top-0 lg:h-dvh lg:w-[35%]">
         <div className="relative h-[32vh] min-h-44 w-full overflow-hidden lg:h-full lg:min-h-0">
           <Image
             src={homeBanner}
@@ -29,11 +29,11 @@ export function AuthPage() {
         </div>
       </aside>
 
-      <main className="order-2 relative z-10 -mt-5 flex flex-1 flex-col rounded-t-3xl bg-background px-5 pb-8 pt-6 lg:mt-0 lg:rounded-none lg:px-10 lg:py-10">
+      <div className="order-2 relative z-10 -mt-5 flex flex-1 flex-col rounded-t-3xl bg-background px-5 pb-8 pt-6 lg:mt-0 lg:rounded-none lg:px-10 lg:py-10">
         <div className="mx-auto flex w-full max-w-md flex-1 flex-col lg:mx-0 lg:max-w-lg">
-          <ComponentsShowcase />
+          <RegistrationWizard />
         </div>
-      </main>
+      </div>
     </div>
   );
 }

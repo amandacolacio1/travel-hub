@@ -1,13 +1,13 @@
 import type { PerfilViagem } from "../types/auth";
 
-export type PerfilOption = {
+export type ProfileOption = {
   id: PerfilViagem;
   titulo: string;
   descricao: string;
   icon: "sozinho" | "casal" | "familia";
 };
 
-export const PERFIS_VIAGEM: PerfilOption[] = [
+export const TRAVEL_PROFILES: ProfileOption[] = [
   {
     id: "sozinho",
     titulo: "Sozinho",

@@ -13,18 +13,13 @@ export type ContaDados = {
 
 export type PreferenciasDados = {
   interesses: string[];
-  orcamento: number;
+  orcamentoInicial: number;
+  orcamentoFinal: number;
   destinos: DestinoDesejado[];
   dataPrevista: string;
 };
 
 export type PerfilViagem = "sozinho" | "casal" | "familia";
-
-export type AuthDados = {
-  conta: ContaDados | null;
-  preferencias: PreferenciasDados | null;
-  perfilViagem: PerfilViagem | null;
-};
 
 export type AuthPayload = {
   conta: ContaDados;

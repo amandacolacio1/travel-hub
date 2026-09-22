@@ -1,8 +1,8 @@
 import { AuthIcon } from "./auth-icon";
-import type { InteresseOption } from "../constants/interesses";
+import type { InterestOption } from "../constants/interests";
 
 type InterestCardProps = {
-  option: InteresseOption;
+  option: InterestOption;
   selected: boolean;
   onToggle: (id: string) => void;
 };
@@ -13,7 +13,7 @@ export function InterestCard({ option, selected, onToggle }: InterestCardProps) 
       type="button"
       onClick={() => onToggle(option.id)}
       aria-pressed={selected}
-      className={`flex w-full items-start gap-3 rounded-xl border p-3.5 text-left transition-colors ${
+      className={`flex w-full cursor-pointer items-start gap-3 rounded-xl border p-3.5 text-left transition-colors ${
         selected
           ? "border-brand-500 bg-brand-500 text-paper"
           : "border-surface-600 bg-paper text-ink hover:border-brand-300"
