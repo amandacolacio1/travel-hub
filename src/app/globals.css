@@ -1,26 +1,91 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-brand-50: #e6e7e8;
+  --color-brand-100: #c9cacc;
+  --color-brand-200: #a1a3a7;
+  --color-brand-300: #777a80;
+  --color-brand-400: #4d5159;
+  --color-brand-500: #080d18;
+  --color-brand-600: #070b14;
+  --color-brand-700: #060911;
+  --color-brand-800: #04070d;
+  --color-brand-900: #03050a;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-brand-alt-50: #e6e8ea;
+  --color-brand-alt-100: #c8ccd1;
+  --color-brand-alt-200: #9fa8b0;
+  --color-brand-alt-300: #74808c;
+  --color-brand-alt-400: #4a5969;
+  --color-brand-alt-500: #03192e;
+  --color-brand-alt-600: #031527;
+  --color-brand-alt-700: #021220;
+  --color-brand-alt-800: #020e19;
+  --color-brand-alt-900: #010a12;
+
+  --color-success-50: #e6fff0;
+  --color-success-100: #c7ffde;
+  --color-success-200: #9effc6;
+  --color-success-300: #73ffad;
+  --color-success-400: #47ff94;
+  --color-success-500: #00ff6a;
+  --color-success-600: #00d95a;
+  --color-success-700: #00b24a;
+  --color-success-800: #008c3a;
+  --color-success-900: #00662a;
+
+  --color-error-50: #fce9e9;
+  --color-error-100: #f7cfcf;
+  --color-error-200: #f2adad;
+  --color-error-300: #ec8888;
+  --color-error-400: #e66363;
+  --color-error-500: #dc2626;
+  --color-error-600: #bb2020;
+  --color-error-700: #9a1b1b;
+  --color-error-800: #791515;
+  --color-error-900: #580f0f;
+
+  --color-warning-50: #fff2e6;
+  --color-warning-100: #ffe1c7;
+  --color-warning-200: #ffcc9e;
+  --color-warning-300: #ffb573;
+  --color-warning-400: #ff9e47;
+  --color-warning-500: #ff7800;
+  --color-warning-600: #d96600;
+  --color-warning-700: #b25400;
+  --color-warning-800: #8c4200;
+  --color-warning-900: #663000;
+
+  --color-surface-500: #eceef0;
+  --color-surface-600: #c9cacc;
+  --color-surface-700: #a5a7a8;
+
+  --color-surface-alt-500: #f0f4f8;
+  --color-surface-alt-600: #cccfd3;
+
+  --color-text-muted-400: #797a7e;
+  --color-text-muted-500: #45464c;
+
+  --color-background: #faf9f6;
+  --color-ink: #000000;
+  --color-paper: #ffffff;
+
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-fraunces);
+
+  --default-font-family: var(--font-sans);
+  --default-border-color: var(--color-surface-600);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-background);
+  color: var(--color-ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-serif), Georgia, serif;
 }
