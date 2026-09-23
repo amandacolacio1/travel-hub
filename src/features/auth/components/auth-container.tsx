@@ -4,8 +4,8 @@ import { RegistrationWizard } from "./registration-wizard";
 
 export function AuthContainer() {
   return (
-    <div className="flex min-h-dvh flex-col gap-48 bg-background lg:flex-row items-center justify-center">
-      <aside className="order-1 w-full shrink-0 lg:sticky lg:top-0 lg:h-dvh lg:w-[35%]">
+    <div className="flex min-h-dvh flex-col gap-48 bg-background lg:flex-row lg:items-start lg:justify-center">
+      <aside className="order-1 w-full shrink-0 self-start lg:sticky lg:top-0 lg:h-dvh lg:w-[35%]">
         <div className="relative h-[32vh] min-h-44 w-full overflow-hidden lg:h-full lg:min-h-0">
           <Image
             src={homeBanner}

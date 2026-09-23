@@ -18,11 +18,17 @@ export function AccountStep({ defaultValues, onAdvance }: AccountStepProps) {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<ContaDados>({
     defaultValues,
     mode: "onBlur",
   });
+  const nome = watch("nome");
+  const email = watch("email");
+  const senha = watch("senha");
+  const canAdvance =
+    !validateName(nome) && !validateEmail(email) && !validatePassword(senha);
 
   return (
     <section className="flex w-full flex-col">
@@ -70,7 +76,12 @@ export function AccountStep({ defaultValues, onAdvance }: AccountStepProps) {
         />
 
         <div className="mt-4 flex flex-col gap-8">
-          <Button variant="primary" type="submit" className="gap-2">
+          <Button
+            variant="primary"
+            type="submit"
+            disabled={!canAdvance}
+            className="gap-2"
+          >
             Próximo passo
             <AuthIcon name="arrow" className="h-4 w-4" />
           </Button>
