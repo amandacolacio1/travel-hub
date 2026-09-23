@@ -31,7 +31,3 @@ export function validatePassword(senha: string): string | undefined {
 
   return undefined;
 }
-
-export function isAccountStepValid(nome: string, email: string, senha: string) {
-  return !validateName(nome) && !validateEmail(email) && !validatePassword(senha);
-}

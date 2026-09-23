@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import type { AuthStep, PerfilViagem } from "../types/auth";
-import { isAccountStepValid } from "../utils/validation";
+import type { AuthPayload } from "../types/auth";
+import { useRegistrationStore } from "../store/use-registration-store";
 import { AccountStep } from "./account-step";
 import { PreferencesStep } from "./preferences-step";
 import { StepIndicator } from "./step-indicator";
@@ -11,96 +10,90 @@ import { TravelProfileStep } from "./travel-profile-step";
 const TOTAL_ETAPAS = 3;
 
 export function RegistrationWizard() {
-  const [etapa, setEtapa] = useState<AuthStep>(1);
-  const [nome, setNome] = useState("");
-  const [email, setEmail] = useState("");
-  const [senha, setSenha] = useState("");
-  const [interesses, setInteresses] = useState<string[]>(["natureza"]);
-  const [pais, setPais] = useState("Brasil");
-  const [cidade, setCidade] = useState("");
-  const [orcamentoInicial, setOrcamentoInicial] = useState(5000);
-  const [orcamentoFinal, setOrcamentoFinal] = useState(12000);
-  const [perfil, setPerfil] = useState<PerfilViagem>("sozinho");
+  const {
+    step,
+    maxStepReached,
+    account,
+    preferences,
+    travelProfile,
+    setStep,
+    setAccount,
+    setPreferences,
+    setTravelProfile,
+    reset,
+  } = useRegistrationStore();
 
-  function toggleInterest(id: string) {
-    setInteresses((current) =>
-      current.includes(id)
-        ? current.filter((item) => item !== id)
-        : [...current, id],
-    );
-  }
-
-  function handleCountryChange(value: string) {
-    setPais(value);
-    setCidade("");
-  }
-
-  const canLeaveAccountStep = isAccountStepValid(nome, email, senha);
-
-  function goToNextStep() {
-    if (etapa >= TOTAL_ETAPAS || !canLeaveAccountStep) {
+  function handleStepClick(target: number) {
+    if (target < 1 || target > maxStepReached) {
       return;
     }
 
-    setEtapa((etapa + 1) as AuthStep);
+    setStep(target as typeof step);
   }
 
-  function handleStepClick(step: number) {
-    if (!canLeaveAccountStep || step < 1 || step > TOTAL_ETAPAS) {
-      return;
-    }
-
-    setEtapa(step as AuthStep);
+  function handleAccountAdvance(data: typeof account) {
+    setAccount(data);
+    setStep(2);
   }
 
-  function goToPreviousStep() {
-    if (etapa > 1) {
-      setEtapa((etapa - 1) as AuthStep);
-    }
+  function handlePreferencesAdvance(data: typeof preferences) {
+    setPreferences(data);
+    setStep(3);
+  }
+
+  function handlePreferencesBack(data: typeof preferences) {
+    setPreferences(data);
+    setStep(1);
+  }
+
+  function handleTravelProfileBack(data: { perfil: typeof travelProfile }) {
+    setTravelProfile(data.perfil);
+    setStep(2);
+  }
+
+  function handleFinishRegistration(data: { perfil: typeof travelProfile }) {
+    setTravelProfile(data.perfil);
+
+    const payload: AuthPayload = {
+      conta: account,
+      preferencias: {
+        interesses: preferences.interesses,
+        orcamentoInicial: preferences.orcamentoInicial,
+        orcamentoFinal: preferences.orcamentoFinal,
+        destinos: [{ pais: preferences.pais, cidade: preferences.cidade }],
+        dataPrevista: "",
+      },
+      perfilViagem: data.perfil,
+    };
+
+    // TODO: substituir por useMutation(registerUser) quando a API existir
+    console.log(payload);
+    reset();
   }
 
   return (
     <div className="flex w-full flex-col items-start gap-[46px]">
       <StepIndicator
-        current={etapa}
+        current={step}
         total={TOTAL_ETAPAS}
-        disabled={!canLeaveAccountStep}
         onStepClick={handleStepClick}
       />
 
-      {etapa === 1 && (
-        <AccountStep
-          nome={nome}
-          email={email}
-          senha={senha}
-          onNameChange={setNome}
-          onEmailChange={setEmail}
-          onPasswordChange={setSenha}
-          onAdvance={goToNextStep}
-        />
+      {step === 1 && (
+        <AccountStep defaultValues={account} onAdvance={handleAccountAdvance} />
       )}
-      {etapa === 2 && (
+      {step === 2 && (
         <PreferencesStep
-          interesses={interesses}
-          onToggleInterest={toggleInterest}
-          pais={pais}
-          onCountryChange={handleCountryChange}
-          cidade={cidade}
-          onCityChange={setCidade}
-          orcamentoInicial={orcamentoInicial}
-          onInitialBudgetChange={setOrcamentoInicial}
-          orcamentoFinal={orcamentoFinal}
-          onFinalBudgetChange={setOrcamentoFinal}
-          onAdvance={goToNextStep}
-          onBack={goToPreviousStep}
+          defaultValues={preferences}
+          onAdvance={handlePreferencesAdvance}
+          onBack={handlePreferencesBack}
         />
       )}
-      {etapa === 3 && (
+      {step === 3 && (
         <TravelProfileStep
-          perfil={perfil}
-          onSelectProfile={setPerfil}
-          onFinish={goToNextStep}
-          onBack={goToPreviousStep}
+          defaultValues={{ perfil: travelProfile }}
+          onFinish={handleFinishRegistration}
+          onBack={handleTravelProfileBack}
         />
       )}
     </div>

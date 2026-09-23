@@ -1,55 +1,28 @@
 "use client";
 
 import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { Button, Input, StepHeading } from "@/shared/components/ui";
-import {
-  isAccountStepValid,
-  validateEmail,
-  validateName,
-  validatePassword,
-} from "../utils/validation";
+import type { ContaDados } from "../types/auth";
+import { validateEmail, validateName, validatePassword } from "../utils/validation";
 import { AuthIcon } from "./auth-icon";
 import { SocialAuth } from "./social-auth";
 
 type AccountStepProps = {
-  nome: string;
-  email: string;
-  senha: string;
-  onNameChange: (value: string) => void;
-  onEmailChange: (value: string) => void;
-  onPasswordChange: (value: string) => void;
-  onAdvance: () => void;
+  defaultValues: ContaDados;
+  onAdvance: (data: ContaDados) => void;
 };
 
-export function AccountStep({
-  nome,
-  email,
-  senha,
-  onNameChange,
-  onEmailChange,
-  onPasswordChange,
-  onAdvance,
-}: AccountStepProps) {
-  const [nomeTocado, setNomeTocado] = useState(false);
-  const [emailTocado, setEmailTocado] = useState(false);
-  const [senhaTocado, setSenhaTocado] = useState(false);
-  const [tentouEnviar, setTentouEnviar] = useState(false);
+export function AccountStep({ defaultValues, onAdvance }: AccountStepProps) {
   const [senhaVisivel, setSenhaVisivel] = useState(false);
-
-  const erroNome = nomeTocado || tentouEnviar ? validateName(nome) : undefined;
-  const erroEmail =
-    emailTocado || tentouEnviar ? validateEmail(email) : undefined;
-  const erroSenha =
-    senhaTocado || tentouEnviar ? validatePassword(senha) : undefined;
-  const canAdvance = isAccountStepValid(nome, email, senha);
-
-  function handleAdvance() {
-    setTentouEnviar(true);
-
-    if (canAdvance) {
-      onAdvance();
-    }
-  }
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ContaDados>({
+    defaultValues,
+    mode: "onBlur",
+  });
 
   return (
     <section className="flex w-full flex-col">
@@ -58,32 +31,28 @@ export function AccountStep({
         subtitle="Crie sua conta no Travel Hub para começar a comparar os seus destinos."
       />
 
-      <div className="mt-8 flex flex-col gap-4">
+      <form
+        className="mt-8 flex flex-col gap-4"
+        onSubmit={handleSubmit(onAdvance)}
+      >
         <Input
           label="Nome completo"
           placeholder="Como deseja ser chamado?"
-          value={nome}
-          onChange={(event) => onNameChange(event.target.value)}
-          onBlur={() => setNomeTocado(true)}
-          error={erroNome}
+          error={errors.nome?.message}
+          {...register("nome", { validate: validateName })}
         />
         <Input
           label="E-mail"
           type="email"
           placeholder="seu@email.com"
-          value={email}
-          onChange={(event) => onEmailChange(event.target.value)}
-          onBlur={() => setEmailTocado(true)}
-          error={erroEmail}
+          error={errors.email?.message}
+          {...register("email", { validate: validateEmail })}
         />
         <Input
           label="Senha"
           type={senhaVisivel ? "text" : "password"}
           placeholder="Mínimo 8 caracteres"
-          value={senha}
-          onChange={(event) => onPasswordChange(event.target.value)}
-          onBlur={() => setSenhaTocado(true)}
-          error={erroSenha}
+          error={errors.senha?.message}
           endAdornment={
             <button
               type="button"
@@ -97,22 +66,18 @@ export function AccountStep({
               />
             </button>
           }
+          {...register("senha", { validate: validatePassword })}
         />
-      </div>
 
-      <div className="mt-8 flex flex-col gap-8">
-        <Button
-          variant="primary"
-          onClick={handleAdvance}
-          disabled={!canAdvance}
-          className="gap-2"
-        >
-          Próximo passo
-          <AuthIcon name="arrow" className="h-4 w-4" />
-        </Button>
+        <div className="mt-4 flex flex-col gap-8">
+          <Button variant="primary" type="submit" className="gap-2">
+            Próximo passo
+            <AuthIcon name="arrow" className="h-4 w-4" />
+          </Button>
 
-        <SocialAuth />
-      </div>
+          <SocialAuth />
+        </div>
+      </form>
     </section>
   );
 }
