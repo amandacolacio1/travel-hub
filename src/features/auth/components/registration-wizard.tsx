@@ -66,7 +66,6 @@ export function RegistrationWizard() {
       perfilViagem: data.perfil,
     };
 
-    // TODO: substituir por useMutation(registerUser) quando a API existir
     console.log(payload);
     reset();
   }
