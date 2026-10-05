@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useEffect, useRef } from "react";
 import type { AuthPayload } from "../types/auth";
 import { useRegistrationStore } from "../store/use-registration-store";
 import { AccountStep } from "./account-step";
@@ -10,6 +12,8 @@ import { TravelProfileStep } from "./travel-profile-step";
 const TOTAL_ETAPAS = 3;
 
 export function RegistrationWizard() {
+  const router = useRouter();
+  const wizardRef = useRef<HTMLDivElement>(null);
   const {
     step,
     maxStepReached,
@@ -22,6 +26,10 @@ export function RegistrationWizard() {
     setTravelProfile,
     reset,
   } = useRegistrationStore();
+
+  useEffect(() => {
+    wizardRef.current?.closest("[data-auth-scroll]")?.scrollTo({ top: 0 });
+  }, [step]);
 
   function handleStepClick(target: number) {
     if (target < 1 || target > maxStepReached) {
@@ -60,18 +68,19 @@ export function RegistrationWizard() {
         interesses: preferences.interesses,
         orcamentoInicial: preferences.orcamentoInicial,
         orcamentoFinal: preferences.orcamentoFinal,
-        destinos: [{ pais: preferences.pais, cidade: preferences.cidade }],
-        dataPrevista: "",
+        destinos: preferences.destinos,
+        dataPrevista: preferences.dataPrevista,
       },
       perfilViagem: data.perfil,
     };
 
     console.log(payload);
     reset();
+    router.push("/dashboard");
   }
 
   return (
-    <div className="flex w-full flex-col items-start gap-[46px]">
+    <div ref={wizardRef} className="flex w-full flex-col items-start gap-[46px]">
       <StepIndicator
         current={step}
         total={TOTAL_ETAPAS}

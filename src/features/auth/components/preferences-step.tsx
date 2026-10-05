@@ -1,13 +1,14 @@
 "use client";
 
-import { Controller, useForm, useWatch } from "react-hook-form";
+import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import {
   Button,
   CurrencyInput,
+  Input,
   Select,
   StepHeading,
 } from "@/shared/components/ui";
-import { DESTINATIONS } from "../constants/destinations";
+import { DESTINATIONS, MAX_DESTINATIONS } from "../constants/destinations";
 import { INTERESTS } from "../constants/interests";
 import type { PreferencesFormData } from "../store/use-registration-store";
 import { AuthIcon } from "./auth-icon";
@@ -19,6 +20,63 @@ type PreferencesStepProps = {
   onBack: (data: PreferencesFormData) => void;
 };
 
+function DestinationRow({
+  index,
+  pais,
+  onPaisChange,
+  onRemove,
+  canRemove,
+  register,
+}: {
+  index: number;
+  pais: string;
+  onPaisChange: () => void;
+  onRemove: () => void;
+  canRemove: boolean;
+  register: ReturnType<typeof useForm<PreferencesFormData>>["register"];
+}) {
+  const cidades =
+    DESTINATIONS.find((item) => item.nome === pais)?.cidades.map((item) => ({
+      value: item,
+      label: item,
+    })) ?? [];
+
+  return (
+    <div className="flex w-full items-start gap-2">
+      <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
+        <Select
+          label="País"
+          placeholder="País"
+          options={DESTINATIONS.map((item) => ({
+            value: item.nome,
+            label: item.nome,
+          }))}
+          {...register(`destinos.${index}.pais`, {
+            onChange: onPaisChange,
+          })}
+        />
+        <Select
+          label="Cidade"
+          placeholder="Cidade"
+          options={cidades}
+          {...register(`destinos.${index}.cidade`)}
+        />
+      </div>
+
+      {canRemove ? (
+        <button
+          type="button"
+          onClick={onRemove}
+          aria-label="Remover destino"
+          className="mt-7 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-lg text-text-muted-400 transition-colors hover:text-error-500"
+        >
+          <AuthIcon name="close" className="h-4 w-4" />
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
 export function PreferencesStep({
   defaultValues,
   onAdvance,
@@ -27,18 +85,18 @@ export function PreferencesStep({
   const { control, register, setValue, getValues, handleSubmit } =
     useForm<PreferencesFormData>({ defaultValues });
 
-  const pais = useWatch({ control, name: "pais" });
-  const cidades =
-    DESTINATIONS.find((item) => item.nome === pais)?.cidades.map((item) => ({
-      value: item,
-      label: item,
-    })) ?? [];
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "destinos",
+  });
+
+  const destinos = useWatch({ control, name: "destinos" });
 
   return (
     <section className="flex w-full flex-col">
       <StepHeading
         title="Personalize sua jornada"
-        subtitle="O Travel Hub compara destinos, custos e experiências para você viajar com mais clareza e menos risco."
+        subtitle="A IA usa seus interesses para recomendar os destinos ideais."
       />
 
       <form
@@ -46,7 +104,7 @@ export function PreferencesStep({
         onSubmit={handleSubmit(onAdvance)}
       >
         <div className="flex flex-col gap-4">
-          <h2 className="text-xl text-ink">Interesses</h2>
+          <h2 className="text-xl text-ink">O que você quer viver?</h2>
           <Controller
             control={control}
             name="interesses"
@@ -68,26 +126,6 @@ export function PreferencesStep({
                 ))}
               </div>
             )}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Select
-            label="País"
-            placeholder="País"
-            options={DESTINATIONS.map((item) => ({
-              value: item.nome,
-              label: item.nome,
-            }))}
-            {...register("pais", {
-              onChange: () => setValue("cidade", ""),
-            })}
-          />
-          <Select
-            label="Cidade"
-            placeholder="Cidade"
-            options={cidades}
-            {...register("cidade")}
           />
         </div>
 
@@ -120,15 +158,61 @@ export function PreferencesStep({
           />
         </div>
 
-        <div className="mt-4 flex gap-3 pb-8">
+        <div className="flex flex-col gap-3">
+          <h2 className="text-xl text-ink">
+            Destinos desejados (até {MAX_DESTINATIONS})
+          </h2>
+
+          {fields.map((field, index) => (
+            <DestinationRow
+              key={field.id}
+              index={index}
+              pais={destinos?.[index]?.pais ?? ""}
+              onPaisChange={() => setValue(`destinos.${index}.cidade`, "")}
+              onRemove={() => remove(index)}
+              canRemove={fields.length > 1}
+              register={register}
+            />
+          ))}
+
+          {fields.length < MAX_DESTINATIONS ? (
+            <button
+              type="button"
+              onClick={() => append({ pais: "Brasil", cidade: "" })}
+              className="flex w-fit cursor-pointer items-center gap-1.5 text-sm font-medium text-brand-500 hover:underline"
+            >
+              + Adicionar destino
+            </button>
+          ) : null}
+        </div>
+
+        <Controller
+          control={control}
+          name="dataPrevista"
+          render={({ field }) => (
+            <Input
+              type="date"
+              label="Data prevista"
+              value={field.value}
+              onChange={field.onChange}
+            />
+          )}
+        />
+
+        <div className="mt-4 flex flex-col gap-3 pb-8 lg:flex-row">
           <Button
             variant="secondary"
             type="button"
             onClick={() => onBack(getValues())}
+            className="order-2 lg:order-1"
           >
             Voltar
           </Button>
-          <Button variant="primary" type="submit" className="gap-2">
+          <Button
+            variant="primary"
+            type="submit"
+            className="order-1 gap-2 lg:order-2"
+          >
             Próximo passo
             <AuthIcon name="arrow" className="h-4 w-4" />
           </Button>

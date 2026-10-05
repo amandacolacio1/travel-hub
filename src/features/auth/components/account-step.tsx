@@ -4,7 +4,11 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button, Input, StepHeading } from "@/shared/components/ui";
 import type { ContaDados } from "../types/auth";
-import { validateEmail, validateName, validatePassword } from "../utils/validation";
+import {
+  validateEmail,
+  validateName,
+  validatePassword,
+} from "../utils/validation";
 import { AuthIcon } from "./auth-icon";
 import { SocialAuth } from "./social-auth";
 

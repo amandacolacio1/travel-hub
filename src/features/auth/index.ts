@@ -1,5 +1,6 @@
 export { AuthContainer } from "./components/auth-container";
 export { AuthIcon } from "./components/auth-icon";
+export { LoginForm } from "./components/login-form";
 export { RegistrationWizard } from "./components/registration-wizard";
 export { AccountStep } from "./components/account-step";
 export { PreferencesStep } from "./components/preferences-step";
