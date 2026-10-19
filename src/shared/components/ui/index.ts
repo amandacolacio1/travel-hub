@@ -1,6 +1,10 @@
+export { Avatar } from "./avatar";
 export { Button } from "./button";
 export { Input } from "./input";
+export { Logo } from "./logo";
+export { Modal } from "./modal";
 export { Label } from "./label";
 export { Select } from "./select";
+export { SearchableSelect } from "./searchable-select";
 export { CurrencyInput } from "./currency-input";
 export { StepHeading } from "./step-heading";
