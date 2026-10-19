@@ -1,12 +1,17 @@
 import { create } from "zustand";
-import type { AuthStep, ContaDados, PerfilViagem } from "../types/auth";
+import type {
+  AuthStep,
+  ContaDados,
+  DestinoDesejado,
+  PerfilViagem,
+} from "../types/auth";
 
 export type PreferencesFormData = {
   interesses: string[];
-  pais: string;
-  cidade: string;
+  destinos: DestinoDesejado[];
   orcamentoInicial: number;
   orcamentoFinal: number;
+  dataPrevista: string;
 };
 
 type RegistrationState = {
@@ -28,10 +33,10 @@ const initialState = {
   account: { nome: "", email: "", senha: "" },
   preferences: {
     interesses: ["natureza"],
-    pais: "Brasil",
-    cidade: "",
+    destinos: [{ pais: "Brasil", cidade: "" }],
     orcamentoInicial: 5000,
     orcamentoFinal: 12000,
+    dataPrevista: "",
   },
   travelProfile: "sozinho" as PerfilViagem,
 };

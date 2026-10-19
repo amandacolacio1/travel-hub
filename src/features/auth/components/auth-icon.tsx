@@ -12,6 +12,7 @@ import {
   User,
   Users,
   UtensilsCrossed,
+  X,
 } from "lucide-react";
 
 export type AuthIconName =
@@ -28,6 +29,7 @@ export type AuthIconName =
   | "arrow"
   | "check"
   | "calendar"
+  | "close"
   | "eye"
   | "eyeOff";
 
@@ -51,6 +53,7 @@ const lucideIcons: Record<
   arrow: ArrowRight,
   check: Check,
   calendar: Calendar,
+  close: X,
   eye: Eye,
   eyeOff: EyeOff,
 };

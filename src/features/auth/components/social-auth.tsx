@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Button } from "@/shared/components/ui";
 import { AuthIcon } from "./auth-icon";
 
@@ -6,8 +7,12 @@ type SocialAuthProps = {
 };
 
 const COPY = {
-  cadastro: { question: "Já tem uma conta?", action: "Entrar" },
-  login: { question: "Ainda não tem uma conta?", action: "Cadastre-se" },
+  cadastro: { question: "Já tem uma conta?", action: "Entrar", href: "/login" },
+  login: {
+    question: "Ainda não tem uma conta?",
+    action: "Cadastre-se",
+    href: "/cadastro",
+  },
 } as const;
 
 export function SocialAuth({ variant = "cadastro" }: SocialAuthProps) {
@@ -30,9 +35,12 @@ export function SocialAuth({ variant = "cadastro" }: SocialAuthProps) {
 
       <p className="text-center font-sans text-sm text-text-muted-400">
         {copy.question}{" "}
-        <span className="cursor-pointer font-medium text-ink underline-offset-2 hover:underline">
+        <Link
+          href={copy.href}
+          className="font-medium text-ink underline-offset-2 hover:underline"
+        >
           {copy.action}
-        </span>
+        </Link>
       </p>
     </div>
   );

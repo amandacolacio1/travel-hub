@@ -13,14 +13,14 @@ export function InterestCard({ option, selected, onToggle }: InterestCardProps) 
       type="button"
       onClick={() => onToggle(option.id)}
       aria-pressed={selected}
-      className={`flex w-full cursor-pointer items-start gap-3 rounded-xl border p-3.5 text-left transition-colors ${
+      className={`flex h-[85px] w-full cursor-pointer items-center gap-3 rounded-xl border p-3.5 text-left transition-colors ${
         selected
           ? "border-brand-500 bg-brand-500 text-paper"
           : "border-surface-600 bg-paper text-ink hover:border-brand-300"
       }`}
     >
       <span
-        className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${
           selected ? "bg-paper/15 text-paper" : "bg-surface-alt-500 text-brand-alt-400"
         }`}
       >

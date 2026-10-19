@@ -1,12 +1,16 @@
 import Image from "next/image";
+import type { ReactNode } from "react";
 import { homeBanner } from "../assets";
-import { RegistrationWizard } from "./registration-wizard";
 
-export function AuthContainer() {
+type AuthContainerProps = {
+  children: ReactNode;
+};
+
+export function AuthContainer({ children }: AuthContainerProps) {
   return (
-    <div className="flex min-h-dvh flex-col gap-48 bg-background lg:flex-row lg:items-start lg:justify-center">
-      <aside className="order-1 w-full shrink-0 self-start lg:sticky lg:top-0 lg:h-dvh lg:w-[35%]">
-        <div className="relative h-[32vh] min-h-44 w-full overflow-hidden lg:h-full lg:min-h-0">
+    <div className="flex h-dvh min-h-dvh flex-col gap-12 bg-background lg:flex-row lg:items-start lg:justify-center lg:gap-0">
+      <aside className="order-1 h-[32vh] w-full shrink-0 self-start lg:sticky lg:top-0 lg:h-dvh lg:w-[35%]">
+        <div className="relative h-full min-h-44 w-full overflow-hidden lg:min-h-0">
           <Image
             src={homeBanner}
             alt="Vista costeira ao entardecer"
@@ -29,9 +33,12 @@ export function AuthContainer() {
         </div>
       </aside>
 
-      <div className="order-2 relative z-10 -mt-5 flex flex-1 flex-col rounded-t-3xl bg-background px-5 pb-8 pt-6 lg:mt-0 lg:rounded-none lg:px-10 lg:py-10">
-        <div className="mx-auto flex w-full max-w-md flex-1 flex-col lg:mx-0 lg:max-w-lg">
-          <RegistrationWizard />
+      <div className="order-2 relative z-10 -mt-5 flex min-h-0 flex-1 flex-col rounded-t-3xl bg-background px-5 pb-8 pt-6 lg:mt-0 lg:h-dvh lg:rounded-none lg:px-10 lg:py-10">
+        <div
+          data-auth-scroll
+          className="scrollbar-hidden mx-auto flex w-full max-w-md min-h-0 flex-1 flex-col justify-center-safe overflow-y-auto lg:mx-auto lg:max-w-lg"
+        >
+          {children}
         </div>
       </div>
     </div>

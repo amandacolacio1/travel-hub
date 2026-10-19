@@ -53,15 +53,16 @@ export function TravelProfileStep({
           )}
         />
 
-        <div className="mt-8 flex gap-3 pb-8">
+        <div className="mt-8 flex flex-col gap-3 pb-8 lg:flex-row">
           <Button
             variant="secondary"
             type="button"
             onClick={() => onBack(getValues())}
+            className="order-2 lg:order-1"
           >
             Voltar
           </Button>
-          <Button variant="primary" type="submit">
+          <Button variant="primary" type="submit" className="order-1 lg:order-2">
             Concluir
           </Button>
         </div>
