@@ -17,6 +17,10 @@ import {
   experienciaCombina,
 } from "@/features/destinos/utils/analise";
 import { bandeira } from "@/features/destinos/utils/formatadores";
+import {
+  useSavedTourIds,
+  useToggleSavedTourMutation,
+} from "../api/use-saved-tours";
 import { ExperienciaCard } from "./experiencia-card";
 import {
   ExperienciaModal,
@@ -35,6 +39,12 @@ export function ExplorarView() {
   );
   const { destinos, ranking, session, isPending, isError } =
     useDestinosRanking();
+  const salvos = useSavedTourIds();
+  const alternarSalvo = useToggleSavedTourMutation();
+
+  function toggleSalvo(apiId: string) {
+    alternarSalvo.mutate({ apiId, salvar: !salvos.has(apiId) });
+  }
 
   // Sem `?destino=`, começa pelo destino que mais combina com o usuário.
   const destino = useMemo(
@@ -117,6 +127,15 @@ export function ExplorarView() {
         ))}
       </div>
 
+      {alternarSalvo.error ? (
+        <p
+          role="alert"
+          className="rounded-lg bg-error-50 px-3.5 py-2.5 font-sans text-xs text-error-500"
+        >
+          {alternarSalvo.error.message}
+        </p>
+      ) : null}
+
       {experiencias.length === 0 ? (
         <StateMessage
           variant="empty"
@@ -131,7 +150,9 @@ export function ExplorarView() {
                 experiencia={item.experiencia}
                 destino={destino}
                 combina={item.combina}
+                salvo={salvos.has(item.experiencia.id)}
                 onSelect={() => setSelecionada(item)}
+                onToggleSalvo={() => toggleSalvo(item.experiencia.id)}
               />
             </li>
           ))}
@@ -141,6 +162,8 @@ export function ExplorarView() {
       <ExperienciaModal
         item={selecionada}
         destino={destino}
+        salvo={selecionada ? salvos.has(selecionada.experiencia.id) : false}
+        onToggleSalvo={() => selecionada && toggleSalvo(selecionada.experiencia.id)}
         onClose={() => setSelecionada(null)}
       />
     </Page>

@@ -1,7 +1,7 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { Clock, Gauge, X } from "lucide-react";
+import { Clock, Gauge, Heart, X } from "lucide-react";
 import { Badge, Button, CoverImage, Eyebrow } from "@/shared/components/ui";
 import type { Destino, Experiencia } from "@/features/destinos/types/destino";
 import { formatarMoedaLocal } from "@/features/destinos/utils/formatadores";
@@ -17,6 +17,8 @@ export type ExperienciaSelecionada = {
 type ExperienciaModalProps = {
   item: ExperienciaSelecionada | null;
   destino: Destino;
+  salvo: boolean;
+  onToggleSalvo: () => void;
   onClose: () => void;
 };
 
@@ -24,6 +26,8 @@ type ExperienciaModalProps = {
 export function ExperienciaModal({
   item,
   destino,
+  salvo,
+  onToggleSalvo,
   onClose,
 }: ExperienciaModalProps) {
   return (
@@ -89,6 +93,18 @@ export function ExperienciaModal({
                 </p>
 
                 <div className="flex flex-col gap-1.5">
+                  <Button
+                    variant="secondary"
+                    aria-pressed={salvo}
+                    onClick={onToggleSalvo}
+                  >
+                    <Heart
+                      className={`h-4 w-4 ${salvo ? "fill-current" : ""}`}
+                      strokeWidth={1.75}
+                      aria-hidden
+                    />
+                    {salvo ? "Experiência salva" : "Salvar experiência"}
+                  </Button>
                   <Button disabled className="uppercase tracking-[0.06em]">
                     Reservar experiência
                   </Button>
