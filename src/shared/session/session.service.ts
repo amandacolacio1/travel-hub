@@ -1,4 +1,4 @@
-import type { PerfilViagem } from "@/features/auth/types/auth";
+import type { AuthPayload, PerfilViagem } from "@/features/auth/types/auth";
 import type { Session, SessionPreferencias } from "./session.types";
 
 /**
@@ -54,6 +54,24 @@ export async function signIn(email: string, senha: string): Promise<Session> {
   return resposta.json();
 }
 
+/** Cria a conta e já devolve a sessão aberta (o servidor seta o cookie). */
+export async function register(payload: AuthPayload): Promise<Session> {
+  const resposta = await fetch("/api/auth/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify(payload),
+  });
+
+  if (!resposta.ok) {
+    throw new Error(
+      await lerMensagemDeErro(resposta, "Não foi possível criar sua conta"),
+    );
+  }
+
+  return resposta.json();
+}
+
 export async function signOut(): Promise<void> {
   await fetch("/api/auth/logout", {
     method: "POST",
@@ -72,7 +90,12 @@ async function atualizarSessao(
   });
 
   if (resposta.status === 401) throw new UnauthorizedError();
-  if (!resposta.ok) throw new Error("Não foi possível salvar as alterações");
+  if (!resposta.ok) {
+    // O servidor explica recusas de regra (e-mail em uso, limite de destinos…).
+    throw new Error(
+      await lerMensagemDeErro(resposta, "Não foi possível salvar as alterações"),
+    );
+  }
 
   return resposta.json();
 }

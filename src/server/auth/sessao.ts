@@ -1,157 +1,150 @@
 import "server-only";
 
-import { randomUUID } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
-import type { PerfilViagem } from "@/features/auth/types/auth";
-import type { Session, SessionPreferencias } from "@/shared/session/session.types";
-import type { UsuarioArmazenado } from "./usuarios-mock";
+import type { Session } from "@/shared/session/session.types";
+import { prisma } from "@/server/db/prisma";
+import { SESSION_INCLUDE, toPublicSession } from "./session-mapper";
 
 export const COOKIE_SESSAO = "travel-hub-sessao";
 
-/** Expiração curta com renovação deslizante a cada requisição (§3.1). */
+/** Expiração curta com renovação deslizante (§3.1). */
 const DURACAO_SEGUNDOS = 30 * 60;
-
-type RegistroDeSessao = {
-  usuarioId: string;
-  nome: string;
-  email: string;
-  fotoUrl: string | null;
-  pais: string;
-  cidade: string;
-  preferencias: SessionPreferencias;
-  perfilViagem: PerfilViagem;
-  expiraEm: number;
-};
+const DURACAO_MS = DURACAO_SEGUNDOS * 1000;
 
 /**
- * Sessões vivem na memória do servidor — some a cada restart e não funciona
- * com múltiplas instâncias. Suficiente para o mock; em produção isso vira
- * Redis ou tabela de sessões.
+ * Só renova quando falta menos da metade do tempo: evita gravar no banco a
+ * cada requisição e ainda mantém logado quem está usando o app.
  */
-const sessoes = new Map<string, RegistroDeSessao>();
+const RENOVAR_QUANDO_RESTAR_MS = DURACAO_MS / 2;
 
-function preferenciasPadrao(): SessionPreferencias {
-  return {
-    interesses: ["natureza", "cultura"],
-    orcamentoInicial: 5000,
-    orcamentoFinal: 12000,
-    destinos: [{ pais: "Brasil", cidade: "Florianópolis" }],
-    dataPrevista: "",
-  };
+/**
+ * O cookie leva um token aleatório; o banco guarda só o SHA-256 dele. Quem
+ * ler a tabela `sessoes` não consegue se passar por ninguém.
+ */
+function hashToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
 }
 
-function paraSessaoPublica(registro: RegistroDeSessao): Session {
-  return {
-    usuario: {
-      nome: registro.nome,
-      email: registro.email,
-      fotoUrl: registro.fotoUrl,
-      pais: registro.pais,
-      cidade: registro.cidade,
-    },
-    preferencias: registro.preferencias,
-    perfilViagem: registro.perfilViagem,
-  };
-}
-
-export async function criarSessao(
-  usuario: UsuarioArmazenado,
-): Promise<Session> {
-  const id = randomUUID();
-
-  const registro: RegistroDeSessao = {
-    usuarioId: usuario.id,
-    nome: usuario.nome,
-    email: usuario.email,
-    fotoUrl: null,
-    pais: "",
-    cidade: "",
-    preferencias: preferenciasPadrao(),
-    perfilViagem: "sozinho",
-    expiraEm: Date.now() + DURACAO_SEGUNDOS * 1000,
-  };
-
-  sessoes.set(id, registro);
-
+async function definirCookie(token: string) {
   const armazenamento = await cookies();
-  armazenamento.set(COOKIE_SESSAO, id, {
+  armazenamento.set(COOKIE_SESSAO, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
     maxAge: DURACAO_SEGUNDOS,
   });
-
-  return paraSessaoPublica(registro);
 }
 
-async function lerRegistro(): Promise<{
-  id: string;
-  registro: RegistroDeSessao;
-} | null> {
+async function lerToken(): Promise<string | null> {
   const armazenamento = await cookies();
-  const id = armazenamento.get(COOKIE_SESSAO)?.value;
-  if (!id) return null;
+  return armazenamento.get(COOKIE_SESSAO)?.value ?? null;
+}
 
-  const registro = sessoes.get(id);
-  if (!registro) return null;
+export async function criarSessao(usuarioId: string): Promise<Session> {
+  const token = randomBytes(32).toString("base64url");
 
-  if (registro.expiraEm <= Date.now()) {
-    sessoes.delete(id);
+  await prisma.$transaction([
+    // Faxina barata: aproveita o login para apagar sessões vencidas do usuário.
+    prisma.sessao.deleteMany({
+      where: { usuarioId, expiraEm: { lt: new Date() } },
+    }),
+    prisma.sessao.create({
+      data: {
+        tokenHash: hashToken(token),
+        usuarioId,
+        expiraEm: new Date(Date.now() + DURACAO_MS),
+      },
+    }),
+  ]);
+
+  await definirCookie(token);
+
+  // Fora da transação: o `include` roda consultas em paralelo (ver update-profile.ts).
+  const usuario = await prisma.usuario.findUniqueOrThrow({
+    where: { id: usuarioId },
+    include: SESSION_INCLUDE,
+  });
+
+  return toPublicSession(usuario);
+}
+
+async function buscarSessaoValida(token: string) {
+  const sessao = await prisma.sessao.findUnique({
+    where: { tokenHash: hashToken(token) },
+    select: { id: true, usuarioId: true, expiraEm: true },
+  });
+  if (!sessao) return null;
+
+  if (sessao.expiraEm <= new Date()) {
+    await prisma.sessao.delete({ where: { id: sessao.id } }).catch(() => {});
     return null;
   }
 
-  return { id, registro };
+  return sessao;
 }
 
+/**
+ * Sessão pública do usuário logado, ou `null`. Renova a expiração (no banco
+ * e no cookie) quando ela está perto de vencer.
+ */
 export async function lerSessao(): Promise<Session | null> {
-  const atual = await lerRegistro();
-  if (!atual) return null;
+  const token = await lerToken();
+  if (!token) return null;
 
-  atual.registro.expiraEm = Date.now() + DURACAO_SEGUNDOS * 1000;
+  const sessao = await buscarSessaoValida(token);
+  if (!sessao) return null;
 
-  return paraSessaoPublica(atual.registro);
-}
-
-export async function atualizarSessao(
-  patch: Partial<Pick<RegistroDeSessao, "perfilViagem">> & {
-    preferencias?: Partial<SessionPreferencias>;
-    usuario?: Partial<Session["usuario"]>;
-  },
-): Promise<Session | null> {
-  const atual = await lerRegistro();
-  if (!atual) return null;
-
-  const { registro } = atual;
-
-  if (patch.perfilViagem) {
-    registro.perfilViagem = patch.perfilViagem;
+  if (sessao.expiraEm.getTime() - Date.now() < RENOVAR_QUANDO_RESTAR_MS) {
+    await prisma.sessao.update({
+      where: { id: sessao.id },
+      data: { expiraEm: new Date(Date.now() + DURACAO_MS) },
+    });
+    // Sem reenviar o cookie, ele venceria no navegador mesmo com a sessão
+    // renovada no banco.
+    await definirCookie(token);
   }
 
-  if (patch.preferencias) {
-    registro.preferencias = { ...registro.preferencias, ...patch.preferencias };
-  }
+  const usuario = await prisma.usuario.findUnique({
+    where: { id: sessao.usuarioId },
+    include: SESSION_INCLUDE,
+  });
 
-  if (patch.usuario) {
-    Object.assign(registro, patch.usuario);
-  }
-
-  registro.expiraEm = Date.now() + DURACAO_SEGUNDOS * 1000;
-
-  return paraSessaoPublica(registro);
+  return usuario ? toPublicSession(usuario) : null;
 }
 
 /** Id do usuário dono da sessão atual; só para uso interno do servidor. */
 export async function lerUsuarioIdDaSessao(): Promise<string | null> {
-  const atual = await lerRegistro();
-  return atual?.registro.usuarioId ?? null;
+  const token = await lerToken();
+  if (!token) return null;
+
+  const sessao = await buscarSessaoValida(token);
+  return sessao?.usuarioId ?? null;
 }
 
 export async function encerrarSessao(): Promise<void> {
+  const token = await lerToken();
+
+  if (token) {
+    await prisma.sessao.deleteMany({ where: { tokenHash: hashToken(token) } });
+  }
+
   const armazenamento = await cookies();
-  const id = armazenamento.get(COOKIE_SESSAO)?.value;
-
-  if (id) sessoes.delete(id);
-
   armazenamento.delete(COOKIE_SESSAO);
+}
+
+/**
+ * Derruba todas as outras sessões do usuário, mantendo a atual. Usado na troca
+ * de senha: quem tinha roubado uma sessão perde o acesso junto.
+ */
+export async function encerrarOutrasSessoes(usuarioId: string): Promise<void> {
+  const token = await lerToken();
+
+  await prisma.sessao.deleteMany({
+    where: {
+      usuarioId,
+      ...(token && { tokenHash: { not: hashToken(token) } }),
+    },
+  });
 }

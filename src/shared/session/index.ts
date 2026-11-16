@@ -1,5 +1,6 @@
 export { useSession, SESSION_QUERY_KEY } from "./use-session";
 export {
+  useRegisterMutation,
   useSignInMutation,
   useSignOutMutation,
   useUpdatePerfilMutation,

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
+import { useRegisterMutation } from "@/shared/session";
 import type { AuthPayload } from "../types/auth";
 import { useRegistrationStore } from "../store/use-registration-store";
 import { AccountStep } from "./account-step";
@@ -14,6 +15,7 @@ const TOTAL_ETAPAS = 3;
 export function RegistrationWizard() {
   const router = useRouter();
   const wizardRef = useRef<HTMLDivElement>(null);
+  const registerMutation = useRegisterMutation();
   const {
     step,
     maxStepReached,
@@ -74,9 +76,13 @@ export function RegistrationWizard() {
       perfilViagem: data.perfil,
     };
 
-    console.log(payload);
-    reset();
-    router.push("/dashboard");
+    // Em erro, o store NÃO é resetado: o usuário corrige sem perder o que preencheu.
+    registerMutation.mutate(payload, {
+      onSuccess: () => {
+        reset();
+        router.push("/dashboard");
+      },
+    });
   }
 
   return (
@@ -102,6 +108,8 @@ export function RegistrationWizard() {
           defaultValues={{ perfil: travelProfile }}
           onFinish={handleFinishRegistration}
           onBack={handleTravelProfileBack}
+          isSubmitting={registerMutation.isPending}
+          errorMessage={registerMutation.error?.message}
         />
       )}
     </div>

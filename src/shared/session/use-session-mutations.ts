@@ -1,9 +1,10 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { PerfilViagem } from "@/features/auth/types/auth";
+import type { AuthPayload, PerfilViagem } from "@/features/auth/types/auth";
 import {
   type PerfilPatch,
+  register,
   signIn,
   signOut,
   updatePerfil,
@@ -23,6 +24,18 @@ export function useSignInMutation() {
   return useMutation({
     mutationFn: ({ email, senha }: { email: string; senha: string }) =>
       signIn(email, senha),
+    onSuccess: (session) => {
+      queryClient.setQueryData(SESSION_QUERY_KEY, session);
+    },
+  });
+}
+
+/** Cadastro: mesmo raciocínio do login — a sessão devolvida vai direto ao cache. */
+export function useRegisterMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: AuthPayload) => register(payload),
     onSuccess: (session) => {
       queryClient.setQueryData(SESSION_QUERY_KEY, session);
     },

@@ -10,7 +10,7 @@ import {
   verificarSenha,
 } from "@/server/auth/senha";
 import { criarSessao } from "@/server/auth/sessao";
-import { buscarUsuarioPorEmail } from "@/server/auth/usuarios-mock";
+import { findUserByEmail } from "@/server/users/user-repository";
 
 /** Mesma resposta para e-mail inexistente e senha errada (§2.1). */
 const CREDENCIAIS_INVALIDAS = "E-mail ou senha inválidos";
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
   }
 
   const { email, senha } = validacao.data;
-  const usuario = buscarUsuarioPorEmail(email);
+  const usuario = await findUserByEmail(email);
 
   // Sem usuário, ainda assim gasta o tempo de um scrypt para não vazar a
   // existência do e-mail pela duração da resposta (§2.1).
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const sessao = await criarSessao(usuario);
+  const sessao = await criarSessao(usuario.id);
   limparTentativas(origem);
 
   await aguardarDuracaoMinima(inicio);
