@@ -1,26 +1,33 @@
 import { Star, Trash2 } from "lucide-react";
-import type { DestinoDesejado } from "@/features/auth/types/auth";
-import { Badge, ButtonLink, Card, CoverImage } from "@/shared/components/ui";
+import { Badge, ButtonLink, Card, CoverImage, Select } from "@/shared/components/ui";
+import { STATUS_VIAGEM } from "../constants/rotulos";
 import type { Destino } from "../types/destino";
+import type { Trip, TripStatus } from "../types/trip";
 import { formatarNota } from "../utils/formatadores";
 
 type DestinoSalvoCardProps = {
-  desejado: DestinoDesejado;
+  viagem: Trip;
   /** Indefinido quando a cidade escolhida ainda não existe no catálogo. */
   destino?: Destino;
+  onMudarStatus: (status: TripStatus) => void;
   onRemover: () => void;
 };
 
+const OPCOES_STATUS = STATUS_VIAGEM.map(({ id, label }) => ({ value: id, label }));
+
 export function DestinoSalvoCard({
-  desejado,
+  viagem,
   destino,
+  onMudarStatus,
   onRemover,
 }: DestinoSalvoCardProps) {
+  const { pais, cidade } = viagem.destino;
+
   return (
     <Card padding="none" className="flex w-full flex-col overflow-hidden">
       <CoverImage
         src={destino?.imagem}
-        alt={`${desejado.cidade}, ${desejado.pais}`}
+        alt={`${cidade}, ${pais}`}
         sizes="(min-width: 1280px) 30vw, (min-width: 640px) 45vw, 100vw"
         className="h-36 w-full"
       >
@@ -39,13 +46,23 @@ export function DestinoSalvoCard({
 
       <div className="flex flex-1 flex-col gap-stack p-card">
         <div className="flex flex-col gap-1">
-          <h3 className="font-serif text-xl text-ink">{desejado.cidade}</h3>
+          <h3 className="font-serif text-xl text-ink">{cidade}</h3>
           <p className="font-sans text-xs text-text-muted-400">
             {destino
               ? `${destino.pais} • ${destino.tema}`
-              : `${desejado.pais} • Ainda sem detalhes no catálogo`}
+              : `${pais} • Ainda sem detalhes no catálogo`}
           </p>
         </div>
+
+        <Select
+          aria-label={`Status da viagem para ${cidade}`}
+          name={`status-${viagem.id}`}
+          placeholder={null}
+          options={OPCOES_STATUS}
+          value={viagem.status}
+          onChange={(evento) => onMudarStatus(evento.target.value as TripStatus)}
+          className="py-2 text-xs"
+        />
 
         <div className="mt-auto flex items-center gap-inline border-t border-surface-600 pt-stack">
           {destino ? (
@@ -63,7 +80,7 @@ export function DestinoSalvoCard({
           <button
             type="button"
             onClick={onRemover}
-            aria-label={`Remover ${desejado.cidade} da lista`}
+            aria-label={`Remover ${cidade} da lista`}
             className="cursor-pointer rounded-md p-2 text-text-muted-400 transition-colors hover:bg-error-100 hover:text-error-700"
           >
             <Trash2 className="h-4 w-4" strokeWidth={1.5} aria-hidden />

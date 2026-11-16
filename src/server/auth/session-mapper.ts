@@ -8,10 +8,6 @@ import type { Session } from "@/shared/session/session.types";
 export const SESSION_INCLUDE = {
   preferencias: true,
   interesses: { include: { interesse: true } },
-  viagens: {
-    include: { destino: true },
-    orderBy: [{ criadoEm: "asc" }, { id: "asc" }],
-  },
 } satisfies Prisma.UsuarioInclude;
 
 export type UsuarioComSessao = Prisma.UsuarioGetPayload<{
@@ -37,10 +33,6 @@ export function toPublicSession(usuario: UsuarioComSessao): Session {
       interesses: usuario.interesses.map(({ interesse }) => interesse.slug),
       orcamentoInicial: Number(preferencias?.orcamentoMin ?? 0),
       orcamentoFinal: Number(preferencias?.orcamentoMax ?? 0),
-      destinos: usuario.viagens.map(({ destino }) => ({
-        pais: destino.pais,
-        cidade: destino.cidade,
-      })),
       // `@db.Date` volta como meia-noite UTC: os 10 primeiros caracteres são a data.
       dataPrevista: preferencias?.dataPrevista?.toISOString().slice(0, 10) ?? "",
     },

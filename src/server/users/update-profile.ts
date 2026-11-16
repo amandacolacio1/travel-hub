@@ -6,12 +6,7 @@ import type { Session } from "@/shared/session/session.types";
 import { SESSION_INCLUDE, toPublicSession } from "@/server/auth/session-mapper";
 import { prisma } from "@/server/db/prisma";
 import { HttpError } from "@/server/http/http-error";
-import {
-  replaceInterests,
-  syncTrips,
-  toDbDate,
-  toDbPerfilViagem,
-} from "./profile-writes";
+import { replaceInterests, toDbDate, toDbPerfilViagem } from "./profile-writes";
 
 /** Mais folga que o padrão (5 s): em dev, cada query cruza o continente até o Neon. */
 const TIMEOUT_TRANSACAO_MS = 15_000;
@@ -57,10 +52,6 @@ export async function updateProfile(
 
       if (preferencias?.interesses) {
         await replaceInterests(tx, usuarioId, preferencias.interesses);
-      }
-
-      if (preferencias?.destinos) {
-        await syncTrips(tx, usuarioId, preferencias.destinos);
       }
     },
     { timeout: TIMEOUT_TRANSACAO_MS },

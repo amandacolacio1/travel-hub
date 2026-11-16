@@ -11,6 +11,14 @@ import type {
   InteresseId,
   NivelCusto,
 } from "../types/destino";
+import type { TripStatus } from "../types/trip";
+
+/** Em ordem de progresso da viagem. */
+export const STATUS_VIAGEM: { id: TripStatus; label: string }[] = [
+  { id: "planejando", label: "Planejando" },
+  { id: "escolhida", label: "Escolhida" },
+  { id: "realizada", label: "Realizada" },
+];
 
 export const NIVEL_CUSTO: Record<NivelCusto, { label: string; tone: BadgeTone }> = {
   economico: { label: "Econômico", tone: "success" },

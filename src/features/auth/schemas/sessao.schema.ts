@@ -9,15 +9,19 @@ const destinoSchema = z.object({
   cidade: z.string().trim().max(80),
 });
 
+/** `"2026-12-01"`, ou vazio para "sem data". */
+export const dataPrevistaSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida")
+  .or(z.literal(""));
+
+/** Preferências completas, como o wizard envia no cadastro. */
 export const preferenciasSchema = z.object({
   interesses: z.array(z.string().trim().max(40)).max(20),
   orcamentoInicial: z.number().int().min(0).max(10_000_000),
   orcamentoFinal: z.number().int().min(0).max(10_000_000),
   destinos: z.array(destinoSchema).max(10),
-  dataPrevista: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida")
-    .or(z.literal("")),
+  dataPrevista: dataPrevistaSchema,
 });
 
 /** Foto enviada já reduzida pelo navegador (data URL), ou `null` para remover. */
@@ -40,7 +44,11 @@ export const usuarioSchema = z.object({
 export const atualizarSessaoSchema = z
   .object({
     perfilViagem: perfilViagemSchema.optional(),
-    preferencias: preferenciasSchema.partial().optional(),
+    // Destinos saíram da sessão: depois do cadastro, a lista é gerida por /api/viagens.
+    preferencias: preferenciasSchema
+      .omit({ destinos: true })
+      .partial()
+      .optional(),
     usuario: usuarioSchema.partial().optional(),
   })
   .refine(

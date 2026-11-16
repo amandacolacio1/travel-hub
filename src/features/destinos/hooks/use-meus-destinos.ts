@@ -1,56 +1,78 @@
 "use client";
 
 import { MAX_DESTINATIONS } from "@/features/auth/constants/destinations";
-import type { DestinoDesejado } from "@/features/auth/types/auth";
-import { useUpdatePreferenciasMutation } from "@/shared/session";
 import { useDestinosRanking } from "../api/use-destinos";
+import {
+  useCreateTripMutation,
+  useDeleteTripMutation,
+  useTrips,
+  useUpdateTripMutation,
+} from "../api/use-trips";
 import type { Destino } from "../types/destino";
+import type { Trip, TripStatus } from "../types/trip";
 import { encontrarDestino, mesmoDestino } from "../utils/catalogo";
 
+/** Limite de viagens com status "planejando" (regra do servidor, espelhada aqui). */
 export const MAX_DESTINOS_SALVOS = MAX_DESTINATIONS;
 
-function paraDesejado({ pais, cidade }: Destino): DestinoDesejado {
-  return { pais, cidade };
-}
-
 /**
- * Lista de destinos desejados do usuário (guardada na sessão), cruzada com o
- * catálogo. Destinos escolhidos no cadastro que não existem no catálogo
- * continuam na lista, só que sem detalhes (`destino` indefinido).
+ * Viagens do usuário (`/api/viagens`) cruzadas com o catálogo. Destinos
+ * salvos que não existem no catálogo continuam na lista, só que sem detalhes
+ * (`destino` indefinido).
  */
 export function useMeusDestinos() {
   const dados = useDestinosRanking();
-  const preferencias = useUpdatePreferenciasMutation();
+  const viagens = useTrips();
+  const criar = useCreateTripMutation();
+  const atualizar = useUpdateTripMutation();
+  const excluir = useDeleteTripMutation();
 
-  const desejados = dados.session?.preferencias.destinos ?? [];
+  const lista = viagens.data ?? [];
   const catalogo = dados.destinos ?? [];
 
-  const itens = desejados.map((desejado) => ({
-    desejado,
-    destino: encontrarDestino(catalogo, desejado),
+  const itens = lista.map((viagem) => ({
+    viagem,
+    destino: encontrarDestino(catalogo, viagem.destino),
   }));
 
   const naoSalvos = dados.ranking.filter(
-    ({ destino }) =>
-      !desejados.some((desejado) => mesmoDestino(desejado, paraDesejado(destino))),
+    ({ destino }) => !lista.some((viagem) => mesmoDestino(viagem.destino, destino)),
   );
 
+  const planejando = lista.filter((viagem) => viagem.status === "planejando").length;
+  const cheio = planejando >= MAX_DESTINOS_SALVOS;
+
+  /** Uma ação nova apaga o erro da anterior, para a mensagem não ficar velha. */
+  function limparErros() {
+    criar.reset();
+    atualizar.reset();
+    excluir.reset();
+  }
+
   return {
-    isPending: dados.isPending,
-    isError: dados.isError,
+    isPending: dados.isPending || viagens.isPending,
+    isError: dados.isError || viagens.isError,
     perfilViagem: dados.session?.perfilViagem,
     catalogo,
     itens,
     /** Ranking sem os destinos que o usuário já salvou. */
     sugestoes: naoSalvos,
-    cheio: desejados.length >= MAX_DESTINOS_SALVOS,
+    vagas: Math.max(0, MAX_DESTINOS_SALVOS - planejando),
+    cheio,
+    /** Recusa do servidor na última ação (limite, destino repetido…). */
+    erro: (criar.error ?? atualizar.error ?? excluir.error)?.message,
     adicionar: (destino: Destino) => {
-      if (desejados.length >= MAX_DESTINOS_SALVOS) return;
-      preferencias.mutate({ destinos: [...desejados, paraDesejado(destino)] });
+      if (cheio) return;
+      limparErros();
+      criar.mutate({ pais: destino.pais, cidade: destino.cidade });
     },
-    remover: (alvo: DestinoDesejado) =>
-      preferencias.mutate({
-        destinos: desejados.filter((desejado) => !mesmoDestino(desejado, alvo)),
-      }),
+    mudarStatus: (viagem: Trip, status: TripStatus) => {
+      limparErros();
+      atualizar.mutate({ id: viagem.id, patch: { status } });
+    },
+    remover: (viagem: Trip) => {
+      limparErros();
+      excluir.mutate(viagem.id);
+    },
   };
 }

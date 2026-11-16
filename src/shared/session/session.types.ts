@@ -1,13 +1,9 @@
-import type {
-  DestinoDesejado,
-  PerfilViagem,
-} from "@/features/auth/types/auth";
+import type { PerfilViagem } from "@/features/auth/types/auth";
 
 /**
- * Representa a sessão completa devolvida pelo backend: quem está logado e as
- * preferências salvas. É o formato que o `GET /api/auth/session` vai devolver
- * quando a fase de mock terminar — por isso nada aqui é opcional por
- * conveniência do mock.
+ * Sessão completa devolvida pelo `GET /api/auth/session`: quem está logado e
+ * as preferências salvas. Os destinos salvos não fazem parte dela — vivem em
+ * `GET /api/viagens` (ver `useTrips`).
  */
 export type Session = {
   usuario: {
@@ -23,7 +19,6 @@ export type Session = {
     interesses: string[];
     orcamentoInicial: number;
     orcamentoFinal: number;
-    destinos: DestinoDesejado[];
     dataPrevista: string;
   };
   perfilViagem: PerfilViagem;

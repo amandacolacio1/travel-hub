@@ -53,13 +53,23 @@ export function MeusDestinosView() {
         }
       />
 
+      {meus.erro ? (
+        <p
+          role="alert"
+          className="rounded-lg bg-error-50 px-3.5 py-2.5 font-sans text-xs text-error-500"
+        >
+          {meus.erro}
+        </p>
+      ) : null}
+
       <ul className="grid gap-block sm:grid-cols-2 xl:grid-cols-3">
-        {meus.itens.map(({ desejado, destino }) => (
-          <li key={`${desejado.pais}-${desejado.cidade}`} className="flex">
+        {meus.itens.map(({ viagem, destino }) => (
+          <li key={viagem.id} className="flex">
             <DestinoSalvoCard
-              desejado={desejado}
+              viagem={viagem}
               destino={destino}
-              onRemover={() => meus.remover(desejado)}
+              onMudarStatus={(status) => meus.mudarStatus(viagem, status)}
+              onRemover={() => meus.remover(viagem)}
             />
           </li>
         ))}
@@ -87,10 +97,7 @@ export function MeusDestinosView() {
         catalogo={meus.catalogo}
         sugestoes={meus.sugestoes}
         perfilViagem={meus.perfilViagem}
-        limite={{
-          vagas: MAX_DESTINOS_SALVOS - meus.itens.length,
-          max: MAX_DESTINOS_SALVOS,
-        }}
+        limite={{ vagas: meus.vagas, max: MAX_DESTINOS_SALVOS }}
         onAdicionar={meus.adicionar}
       />
     </Page>

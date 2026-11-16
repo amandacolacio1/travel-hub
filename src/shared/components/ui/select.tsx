@@ -10,7 +10,8 @@ type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   label?: string;
   error?: string;
   options: SelectOption[];
-  placeholder?: string;
+  /** `null` remove a opção vazia — para campos que sempre têm um valor. */
+  placeholder?: string | null;
 };
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
@@ -39,7 +40,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           } ${className}`}
           {...props}
         >
-          <option value="">{placeholder}</option>
+          {placeholder === null ? null : <option value="">{placeholder}</option>}
           {options.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
