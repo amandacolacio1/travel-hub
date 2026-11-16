@@ -30,11 +30,12 @@ export function Sidebar({
           <Dialog.Overlay className="fixed inset-0 z-50 bg-brand-500/40 backdrop-blur-[2px] lg:hidden" />
           <Dialog.Content
             aria-label="Menu de navegação"
-            className="fixed inset-y-0 left-0 z-50 w-64 shadow-xl outline-none lg:hidden"
+            className="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] shadow-xl outline-none lg:hidden"
           >
             <Dialog.Title className="sr-only">Menu de navegação</Dialog.Title>
             <SidebarNav
               onNavigate={() => onMobileOpenChange(false)}
+              onClose={() => onMobileOpenChange(false)}
               onSignOut={onSignOut}
             />
           </Dialog.Content>

@@ -2,6 +2,7 @@ export { useSession, SESSION_QUERY_KEY } from "./use-session";
 export {
   useSignInMutation,
   useSignOutMutation,
+  useUpdatePerfilMutation,
   useUpdatePerfilViagemMutation,
   useUpdatePreferenciasMutation,
 } from "./use-session-mutations";

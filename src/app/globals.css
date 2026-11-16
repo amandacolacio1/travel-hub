@@ -75,6 +75,21 @@
 
   --default-font-family: var(--font-sans);
   --default-border-color: var(--color-surface-600);
+
+  /*
+   * Escala de layout. Use estes nomes (gap-section, p-card...) em vez de
+   * números soltos: o nome diz a intenção e o valor muda num lugar só.
+   * Detalhes e exemplos em docs/padrao-frontend.md.
+   */
+  --spacing-inline: 0.5rem; /* 8px  — itens lado a lado (ícone + texto) */
+  --spacing-stack: 1rem; /* 16px — campos e itens empilhados */
+  --spacing-block: 1.5rem; /* 24px — entre cards de uma grade e título → conteúdo */
+  --spacing-section: 2rem; /* 32px — entre seções de uma página */
+  --spacing-card: 1.25rem; /* 20px — padding interno padrão de card */
+  --spacing-card-lg: 1.5rem; /* 24px — padding de cards de destaque */
+
+  --radius-card: 1rem;
+  --shadow-card: 0 1px 2px rgb(8 13 24 / 0.04), 0 6px 20px rgb(8 13 24 / 0.05);
 }
 
 body {

@@ -1,12 +1,5 @@
-import { ArrowRightLeft } from "lucide-react";
-import { PagePlaceholder } from "@/features/dashboard/components/page-placeholder";
+import { ComparadorView } from "@/features/comparador/components/comparador-view";
 
 export default function ComparadorPage() {
-  return (
-    <PagePlaceholder
-      icon={ArrowRightLeft}
-      titulo="Comparador"
-      descricao="Em breve você vai comparar destinos lado a lado por custo, clima e interesses."
-    />
-  );
+  return <ComparadorView />;
 }

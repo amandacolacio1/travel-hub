@@ -116,7 +116,7 @@ export function PreferencesStep({
     <section className="flex w-full flex-col">
       <StepHeading
         title="Personalize sua jornada"
-        subtitle="A IA usa seus interesses para recomendar os destinos ideais."
+        subtitle="Usamos seus interesses para recomendar os destinos ideais."
       />
 
       <form

@@ -1,12 +1,5 @@
-import { MapPin } from "lucide-react";
-import { PagePlaceholder } from "@/features/dashboard/components/page-placeholder";
+import { MeusDestinosView } from "@/features/destinos/components/meus-destinos-view";
 
 export default function DestinosPage() {
-  return (
-    <PagePlaceholder
-      icon={MapPin}
-      titulo="Destinos"
-      descricao="Em breve você vai salvar e organizar os destinos que mais combinam com você."
-    />
-  );
+  return <MeusDestinosView />;
 }

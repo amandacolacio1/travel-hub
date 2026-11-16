@@ -1,11 +1,11 @@
 import type { PerfilViagem } from "@/features/auth/types/auth";
-import { MOCK_USERS } from "@/features/auth/constants/mock-users";
 import type { Session, SessionPreferencias } from "./session.types";
 
-const SESSION_KEY = "travel-hub-session";
-const LATENCIA_MS = 350;
+/**
+ * Cliente das rotas de autenticação. A sessão vive num cookie httpOnly que o
+ * JavaScript não lê — por isso toda leitura passa por `GET /api/auth/session`.
+ */
 
-/** Erro de sessão ausente/expirada — equivalente a um `401` do backend. */
 export class UnauthorizedError extends Error {
   constructor() {
     super("Sessão não encontrada");
@@ -13,114 +13,88 @@ export class UnauthorizedError extends Error {
   }
 }
 
-function esperar(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function lerSessaoArmazenada(): Session | null {
-  if (typeof window === "undefined") return null;
-
-  try {
-    const bruto = window.localStorage.getItem(SESSION_KEY);
-    return bruto ? (JSON.parse(bruto) as Session) : null;
-  } catch {
-    // localStorage indisponível (modo privado) ou JSON corrompido.
-    return null;
+export class CredenciaisInvalidasError extends Error {
+  constructor(message = "E-mail ou senha inválidos") {
+    super(message);
+    this.name = "CredenciaisInvalidasError";
   }
 }
 
-function gravarSessao(session: Session | null) {
-  if (typeof window === "undefined") return;
-
-  try {
-    if (session) {
-      window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-    } else {
-      window.localStorage.removeItem(SESSION_KEY);
-    }
-  } catch {
-    // Sem persistência a sessão vira "só esta aba" — não é motivo para quebrar.
-  }
+async function lerMensagemDeErro(resposta: Response, padrao: string) {
+  const corpo = await resposta.json().catch(() => null);
+  return typeof corpo?.message === "string" ? corpo.message : padrao;
 }
 
-/** Preferências iniciais de quem acabou de entrar pelo mock de login. */
-function preferenciasPadrao(): SessionPreferencias {
-  return {
-    interesses: ["natureza", "cultura"],
-    orcamentoInicial: 5000,
-    orcamentoFinal: 12000,
-    destinos: [{ pais: "Brasil", cidade: "Florianópolis" }],
-    dataPrevista: "",
-  };
-}
-
-/** `GET /api/auth/session` — lança `UnauthorizedError` se não houver sessão. */
 export async function fetchSession(): Promise<Session> {
-  await esperar(LATENCIA_MS);
+  const resposta = await fetch("/api/auth/session", {
+    credentials: "same-origin",
+    cache: "no-store",
+  });
 
-  const session = lerSessaoArmazenada();
-  if (!session) throw new UnauthorizedError();
+  if (resposta.status === 401) throw new UnauthorizedError();
+  if (!resposta.ok) throw new Error("Não foi possível carregar a sessão");
 
-  return session;
+  return resposta.json();
 }
 
-/** `POST /api/auth/login` — valida contra os usuários mockados. */
 export async function signIn(email: string, senha: string): Promise<Session> {
-  await esperar(LATENCIA_MS);
+  const resposta = await fetch("/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({ email, senha }),
+  });
 
-  const encontrado = MOCK_USERS.find(
-    (item) =>
-      item.email.toLowerCase() === email.trim().toLowerCase() &&
-      item.senha === senha,
-  );
-
-  if (!encontrado) {
-    throw new Error("E-mail ou senha inválidos");
+  if (!resposta.ok) {
+    throw new CredenciaisInvalidasError(
+      await lerMensagemDeErro(resposta, "E-mail ou senha inválidos"),
+    );
   }
 
-  const session: Session = {
-    usuario: { nome: encontrado.nome, email: encontrado.email, fotoUrl: null },
-    preferencias: preferenciasPadrao(),
-    perfilViagem: "sozinho",
-  };
-
-  gravarSessao(session);
-  return session;
+  return resposta.json();
 }
 
-/** `POST /api/auth/logout`. */
 export async function signOut(): Promise<void> {
-  await esperar(120);
-  gravarSessao(null);
+  await fetch("/api/auth/logout", {
+    method: "POST",
+    credentials: "same-origin",
+  });
 }
 
-/** `PATCH /api/auth/session` — troca o perfil de viagem. */
+async function atualizarSessao(
+  payload: Record<string, unknown>,
+): Promise<Session> {
+  const resposta = await fetch("/api/auth/session", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify(payload),
+  });
+
+  if (resposta.status === 401) throw new UnauthorizedError();
+  if (!resposta.ok) throw new Error("Não foi possível salvar as alterações");
+
+  return resposta.json();
+}
+
 export async function updatePerfilViagem(
   perfilViagem: PerfilViagem,
 ): Promise<Session> {
-  await esperar(LATENCIA_MS);
-
-  const session = lerSessaoArmazenada();
-  if (!session) throw new UnauthorizedError();
-
-  const atualizada: Session = { ...session, perfilViagem };
-  gravarSessao(atualizada);
-  return atualizada;
+  return atualizarSessao({ perfilViagem });
 }
 
-/** `PATCH /api/auth/session` — atualiza parte das preferências. */
 export async function updatePreferencias(
   patch: Partial<SessionPreferencias>,
 ): Promise<Session> {
-  await esperar(LATENCIA_MS);
+  return atualizarSessao({ preferencias: patch });
+}
 
-  const session = lerSessaoArmazenada();
-  if (!session) throw new UnauthorizedError();
+export type PerfilPatch = {
+  usuario?: Partial<Session["usuario"]>;
+  preferencias?: Partial<SessionPreferencias>;
+};
 
-  const atualizada: Session = {
-    ...session,
-    preferencias: { ...session.preferencias, ...patch },
-  };
-  gravarSessao(atualizada);
-  return atualizada;
+/** Salva dados da conta e preferências em um único PATCH. */
+export async function updatePerfil(patch: PerfilPatch): Promise<Session> {
+  return atualizarSessao(patch);
 }

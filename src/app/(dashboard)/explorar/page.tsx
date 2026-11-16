@@ -1,12 +1,14 @@
-import { Compass } from "lucide-react";
-import { PagePlaceholder } from "@/features/dashboard/components/page-placeholder";
+import { Suspense } from "react";
+import { StateMessage } from "@/shared/components/ui";
+import { ExplorarView } from "@/features/explorar/components/explorar-view";
 
 export default function ExplorarPage() {
+  // `useSearchParams` na view exige Suspense para não desligar a renderização estática.
   return (
-    <PagePlaceholder
-      icon={Compass}
-      titulo="Explorar"
-      descricao="Em breve você vai navegar por destinos sugeridos a partir das suas preferências."
-    />
+    <Suspense
+      fallback={<StateMessage variant="loading" title="Buscando experiências…" />}
+    >
+      <ExplorarView />
+    </Suspense>
   );
 }

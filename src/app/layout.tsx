@@ -15,7 +15,8 @@ const fraunces = Fraunces({
 
 export const metadata: Metadata = {
   title: "Travel Hub",
-  description: "Decida sua próxima jornada com inteligência",
+  description:
+    "Compare destinos, custos e experiências para decidir sua próxima viagem.",
 };
 
 export default function RootLayout({
