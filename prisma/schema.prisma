@@ -1,0 +1,190 @@
+// Modelo de dados do Travel Hub — baseado no "Modelo de dados · V2 sem IA".
+//
+// Convenção: models e campos em camelCase no TypeScript; `@@map`/`@map`
+// mantêm tabelas e colunas em snake_case no Postgres, iguais ao diagrama.
+// O guia completo está em docs/backend-integration.md.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ──────────────────────────────────────────────────────────────
+
+enum PerfilViagem {
+  SOZINHO
+  CASAL
+  FAMILIA
+}
+
+enum StatusViagem {
+  PLANEJANDO
+  ESCOLHIDA
+  REALIZADA
+}
+
+// ─── Conta ──────────────────────────────────────────────────────────────
+
+/// Conta e dados pessoais. Cadastro · Etapa 1 e Editar perfil.
+model Usuario {
+  id        String   @id @default(uuid()) @db.Uuid
+  nome      String
+  /// Sempre salvo em minúsculas (normalizado antes de gravar).
+  email     String   @unique
+  /// `salt:hash` gerado por `gerarHashDeSenha` (scrypt). Nunca a senha.
+  senhaHash String   @map("senha_hash")
+  pais      String   @default("")
+  cidade    String   @default("")
+  /// Hoje é uma data URL reduzida pelo navegador (até ~200 KB), por isso `Text`.
+  fotoUrl   String?  @map("foto_url") @db.Text
+  criadoEm  DateTime @default(now()) @map("criado_em")
+
+  preferencias   Preferencias?
+  interesses     UsuarioInteresse[]
+  viagens        Viagem[]
+  passeiosSalvos PasseioSalvo[]
+  sessoes        Sessao[]
+
+  @@map("usuarios")
+}
+
+/// 1:1 com usuário. Cadastro · Etapas 2 e 3 e Editar perfil.
+///
+/// Diferença do PDF: o front usa uma faixa de orçamento (slider com dois
+/// valores) e uma data prevista geral, então `orcamento` virou
+/// `orcamentoMin`/`orcamentoMax` e `dataPrevista` também mora aqui.
+model Preferencias {
+  id           String       @id @default(uuid()) @db.Uuid
+  usuarioId    String       @unique @map("usuario_id") @db.Uuid
+  perfilViagem PerfilViagem @default(SOZINHO) @map("perfil_viagem")
+  orcamentoMin Decimal      @map("orcamento_min") @db.Decimal(12, 2)
+  orcamentoMax Decimal      @map("orcamento_max") @db.Decimal(12, 2)
+  moeda        String       @default("BRL") @db.Char(3)
+  dataPrevista DateTime?    @map("data_prevista") @db.Date
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("preferencias")
+}
+
+/// Lista fixa preenchida pelo seed (prisma/seed.ts).
+///
+/// Diferença do PDF: `slug` é o identificador estável que o front já usa
+/// ("natureza", "cultura"…), para não depender do `id` numérico.
+model Interesse {
+  id    Int    @id @default(autoincrement())
+  slug  String @unique
+  nome  String @unique
+  icone String
+
+  usuarios UsuarioInteresse[]
+
+  @@map("interesses")
+}
+
+/// N:N entre usuários e interesses.
+model UsuarioInteresse {
+  usuarioId   String @map("usuario_id") @db.Uuid
+  interesseId Int    @map("interesse_id")
+
+  usuario   Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  interesse Interesse @relation(fields: [interesseId], references: [id], onDelete: Cascade)
+
+  @@id([usuarioId, interesseId])
+  @@map("usuario_interesses")
+}
+
+// ─── Destinos e viagens ─────────────────────────────────────────────────
+
+/// Cópia compartilhada de um destino. Só entra quando alguém salva (upsert
+/// por `codigoPais + cidade`). Os campos opcionais são preenchidos quando a
+/// integração com a API de países estiver pronta.
+model Destino {
+  id          String   @id @default(uuid()) @db.Uuid
+  codigoPais  String   @map("codigo_pais") @db.Char(2)
+  pais        String
+  cidade      String
+  bandeiraUrl String?  @map("bandeira_url")
+  moeda       String?  @db.Char(3)
+  latitude    Decimal? @db.Decimal(9, 6)
+  longitude   Decimal? @db.Decimal(9, 6)
+
+  viagens  Viagem[]
+  passeios Passeio[]
+
+  @@unique([codigoPais, cidade])
+  @@map("destinos")
+}
+
+/// "Meus Destinos": o destino que um usuário salvou.
+model Viagem {
+  id           String       @id @default(uuid()) @db.Uuid
+  usuarioId    String       @map("usuario_id") @db.Uuid
+  destinoId    String       @map("destino_id") @db.Uuid
+  dataPrevista DateTime?    @map("data_prevista") @db.Date
+  status       StatusViagem @default(PLANEJANDO)
+  criadoEm     DateTime     @default(now()) @map("criado_em")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  destino Destino @relation(fields: [destinoId], references: [id], onDelete: Restrict)
+
+  @@unique([usuarioId, destinoId])
+  @@index([usuarioId, status])
+  @@map("viagens")
+}
+
+// ─── Passeios ───────────────────────────────────────────────────────────
+
+/// Cópia de um passeio da API externa. Só entra quando alguém salva
+/// (upsert por `apiId`).
+model Passeio {
+  id        String  @id @default(uuid()) @db.Uuid
+  apiId     String  @unique @map("api_id")
+  destinoId String  @map("destino_id") @db.Uuid
+  titulo    String
+  descricao String  @db.Text
+  categoria String
+  preco     Decimal @db.Decimal(12, 2)
+  imagemUrl String? @map("imagem_url")
+
+  destino Destino        @relation(fields: [destinoId], references: [id], onDelete: Restrict)
+  salvos  PasseioSalvo[]
+
+  @@index([destinoId])
+  @@map("passeios")
+}
+
+/// N:N: passeios marcados com o coração.
+model PasseioSalvo {
+  usuarioId String   @map("usuario_id") @db.Uuid
+  passeioId String   @map("passeio_id") @db.Uuid
+  criadoEm  DateTime @default(now()) @map("criado_em")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  passeio Passeio @relation(fields: [passeioId], references: [id], onDelete: Cascade)
+
+  @@id([usuarioId, passeioId])
+  @@map("passeios_salvos")
+}
+
+// ─── Sessão ─────────────────────────────────────────────────────────────
+
+/// Tabela extra (não está no PDF): substitui o JWT. O cookie httpOnly guarda
+/// um token aleatório; aqui fica só o hash SHA-256 dele, então um vazamento
+/// do banco não entrega sessões válidas. Logout = apagar a linha.
+model Sessao {
+  id        String   @id @default(uuid()) @db.Uuid
+  tokenHash String   @unique @map("token_hash")
+  usuarioId String   @map("usuario_id") @db.Uuid
+  expiraEm  DateTime @map("expira_em")
+  criadoEm  DateTime @default(now()) @map("criado_em")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
+  @@map("sessoes")
+}
