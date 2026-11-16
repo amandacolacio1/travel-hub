@@ -4,24 +4,50 @@ import { DESTINATIONS } from "@/features/auth/constants/destinations";
 import { normalizar } from "@/features/destinos/utils/catalogo";
 import { listarDestinos } from "@/server/destinos/catalogo";
 
-type PaisConhecido = { codigo: string; nome: string; cidades: string[] };
+type PaisConhecido = {
+  codigo: string;
+  nome: string;
+  cidades: string[];
+  moeda: string | null;
+};
 
 export type DestinoResolvido = {
   codigoPais: string;
   pais: string;
   cidade: string;
+  moeda: string | null;
+  bandeiraUrl: string;
+};
+
+/**
+ * Moeda dos países do cadastro que não estão no catálogo editorial. O PDF
+ * previa o REST Countries para isso, mas a v5 dele exige chave de API; para
+ * meia dúzia de países, um mapa fixo resolve sem dependência externa.
+ */
+const MOEDA_DO_CADASTRO: Record<string, string> = {
+  BR: "BRL",
+  PT: "EUR",
+  IT: "EUR",
+  ES: "EUR",
+  FR: "EUR",
+  JP: "JPY",
 };
 
 /**
  * Países que o app conhece hoje: os do cadastro (`DESTINATIONS`) somados aos
- * do catálogo editorial. Quando a API de países entrar (Fase 5 do guia), esta
- * é a única função que muda.
+ * do catálogo editorial. Para usar uma API de países no futuro, esta é a
+ * única função que muda.
  */
 function montarPaises(): PaisConhecido[] {
   const paises = new Map<string, PaisConhecido>();
 
   for (const { codigo, nome, cidades } of DESTINATIONS) {
-    paises.set(codigo, { codigo, nome, cidades: [...cidades] });
+    paises.set(codigo, {
+      codigo,
+      nome,
+      cidades: [...cidades],
+      moeda: MOEDA_DO_CADASTRO[codigo] ?? null,
+    });
   }
 
   for (const destino of listarDestinos()) {
@@ -29,10 +55,12 @@ function montarPaises(): PaisConhecido[] {
       codigo: destino.codigoPais,
       nome: destino.pais,
       cidades: [],
+      moeda: null,
     };
     if (!pais.cidades.some((c) => normalizar(c) === normalizar(destino.cidade))) {
       pais.cidades.push(destino.cidade);
     }
+    pais.moeda ??= destino.moeda.codigo;
     paises.set(destino.codigoPais, pais);
   }
 
@@ -40,6 +68,11 @@ function montarPaises(): PaisConhecido[] {
 }
 
 const PAISES = montarPaises();
+
+/** Bandeira em SVG pelo código ISO (flagcdn.com, sem chave). */
+function urlDaBandeira(codigoPais: string): string {
+  return `https://flagcdn.com/${codigoPais.toLowerCase()}.svg`;
+}
 
 /**
  * Converte o `{ pais, cidade }` que o front envia no formato da tabela
@@ -62,5 +95,7 @@ export function resolveDestination(
     codigoPais: conhecido.codigo,
     pais: conhecido.nome,
     cidade: cidadeCanonica ?? cidade.trim(),
+    moeda: conhecido.moeda,
+    bandeiraUrl: urlDaBandeira(conhecido.codigo),
   };
 }

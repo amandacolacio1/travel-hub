@@ -9,6 +9,7 @@ import type {
 import type { Trip, TripStatus } from "@/features/destinos/types/trip";
 import { prisma } from "@/server/db/prisma";
 import { resolveDestination } from "@/server/destinations/resolve-destination";
+import { upsertDestination } from "@/server/destinations/upsert-destination";
 import { HttpError } from "@/server/http/http-error";
 import { toDbDate } from "@/server/users/profile-writes";
 
@@ -99,14 +100,7 @@ export async function createTrip(
       await travarUsuario(tx, usuarioId);
       await garantirVagaParaPlanejar(tx, usuarioId);
 
-      const { id: destinoId } = await tx.destino.upsert({
-        where: {
-          codigoPais_cidade: { codigoPais: destino.codigoPais, cidade: destino.cidade },
-        },
-        update: {},
-        create: destino,
-        select: { id: true },
-      });
+      const destinoId = await upsertDestination(tx, destino);
 
       return tx.viagem.create({
         data: { usuarioId, destinoId, dataPrevista: toDbDate(dataPrevista ?? "") },

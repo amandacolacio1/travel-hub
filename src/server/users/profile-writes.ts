@@ -3,7 +3,11 @@ import "server-only";
 import type { PerfilViagem as PerfilViagemDb, Prisma } from "@/generated/prisma/client";
 import { MAX_DESTINATIONS } from "@/features/auth/constants/destinations";
 import type { DestinoDesejado, PerfilViagem } from "@/features/auth/types/auth";
-import { resolveDestination } from "@/server/destinations/resolve-destination";
+import {
+  type DestinoResolvido,
+  resolveDestination,
+} from "@/server/destinations/resolve-destination";
+import { upsertDestination } from "@/server/destinations/upsert-destination";
 import { HttpError } from "@/server/http/http-error";
 
 type Tx = Prisma.TransactionClient;
@@ -46,7 +50,7 @@ export async function syncTrips(
   usuarioId: string,
   destinos: DestinoDesejado[],
 ) {
-  const resolvidos = new Map<string, NonNullable<ReturnType<typeof resolveDestination>>>();
+  const resolvidos = new Map<string, DestinoResolvido>();
 
   for (const { pais, cidade } of destinos) {
     // O wizard começa com uma linha "Brasil / (vazio)"; linha sem cidade não é destino.
@@ -65,15 +69,7 @@ export async function syncTrips(
 
   const destinoIds: string[] = [];
   for (const destino of resolvidos.values()) {
-    const { id } = await tx.destino.upsert({
-      where: {
-        codigoPais_cidade: { codigoPais: destino.codigoPais, cidade: destino.cidade },
-      },
-      update: {},
-      create: destino,
-      select: { id: true },
-    });
-    destinoIds.push(id);
+    destinoIds.push(await upsertDestination(tx, destino));
   }
 
   await tx.viagem.deleteMany({

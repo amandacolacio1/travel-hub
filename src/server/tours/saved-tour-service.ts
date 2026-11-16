@@ -4,6 +4,8 @@ import type { Prisma } from "@/generated/prisma/client";
 import type { Destino, Experiencia } from "@/features/destinos/types/destino";
 import type { SavedTour } from "@/features/explorar/types/saved-tour";
 import { prisma } from "@/server/db/prisma";
+import { resolveDestination } from "@/server/destinations/resolve-destination";
+import { upsertDestination } from "@/server/destinations/upsert-destination";
 import { listarDestinos } from "@/server/destinos/catalogo";
 import { HttpError } from "@/server/http/http-error";
 
@@ -70,12 +72,8 @@ export async function saveTour(usuarioId: string, apiId: string): Promise<SavedT
   if (!fonte) throw new HttpError(404, "Passeio não encontrado");
 
   const { experiencia, destino } = fonte;
-  const dadosDoDestino = {
-    codigoPais: destino.codigoPais,
-    pais: destino.pais,
-    cidade: destino.cidade,
-    moeda: destino.moeda.codigo,
-  };
+  // O destino do catálogo é sempre conhecido; `!` documenta essa garantia.
+  const destinoResolvido = resolveDestination(destino.pais, destino.cidade)!;
   const dadosDoPasseio = {
     titulo: experiencia.titulo,
     descricao: experiencia.descricao,
@@ -85,14 +83,7 @@ export async function saveTour(usuarioId: string, apiId: string): Promise<SavedT
   };
 
   await prisma.$transaction(async (tx) => {
-    const { id: destinoId } = await tx.destino.upsert({
-      where: {
-        codigoPais_cidade: { codigoPais: destino.codigoPais, cidade: destino.cidade },
-      },
-      update: { moeda: dadosDoDestino.moeda },
-      create: dadosDoDestino,
-      select: { id: true },
-    });
+    const destinoId = await upsertDestination(tx, destinoResolvido);
 
     // A cópia é atualizada a cada novo salvamento: fica tão fresca quanto a fonte.
     const { id: passeioId } = await tx.passeio.upsert({

@@ -1,4 +1,5 @@
 import type { Destino, NivelCusto } from "../types/destino";
+import type { LiveConditions } from "../types/live-conditions";
 
 const MESES = [
   "Jan",
@@ -64,6 +65,24 @@ export function descreverCotacao(moeda: Destino["moeda"]): string {
   return `${moeda.base} ${moeda.codigo} = ${brlComCentavos.format(moeda.cotacaoBRL)}`;
 }
 
+/** `"2026-11-16"` → `"16/11"`. */
+export function formatarDiaMes(iso: string): string {
+  const [, mes, dia] = iso.split("-");
+  return `${dia}/${mes}`;
+}
+
+/** Cotação do dia (Frankfurter), ex.: "100 JPY = R$ 3,57 · cotação de 16/11". */
+export function descreverCotacaoAoVivo(
+  cambio: NonNullable<LiveConditions["cambio"]>,
+): string {
+  const valor = new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: cambio.para,
+  }).format(cambio.valor);
+
+  return `${cambio.base} ${cambio.de} = ${valor} · cotação de ${formatarDiaMes(cambio.data)}`;
+}
+
 /** Converte o código ISO do país na bandeira (regional indicators). */
 export function bandeira(codigoPais: string): string {
   return [...codigoPais.toUpperCase()]
@@ -78,7 +97,7 @@ export function periodoDosMeses(meses: number[]): string {
   return meses.length === 1 ? primeiro : `${primeiro} – ${ultimo}`;
 }
 
-export function faixaDeClima({ minC, maxC }: Destino["clima"]): string {
+export function faixaDeClima({ minC, maxC }: { minC: number; maxC: number }): string {
   return `${minC}–${maxC}°C`;
 }
 
