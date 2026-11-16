@@ -3,8 +3,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { PerfilViagem } from "@/features/auth/types/auth";
 import {
+  type PerfilPatch,
   signIn,
   signOut,
+  updatePerfil,
   updatePerfilViagem,
   updatePreferencias,
 } from "./session.service";
@@ -101,6 +103,21 @@ export function useUpdatePreferenciasMutation() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY });
+    },
+  });
+}
+
+/**
+ * Salva a tela de perfil (conta + interesses). Sem update otimista: a tela
+ * confirma "salvo" só depois da resposta, e o servidor pode recusar o e-mail.
+ */
+export function useUpdatePerfilMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (patch: PerfilPatch) => updatePerfil(patch),
+    onSuccess: (session) => {
+      queryClient.setQueryData(SESSION_QUERY_KEY, session);
     },
   });
 }

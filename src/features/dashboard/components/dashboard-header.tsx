@@ -2,7 +2,7 @@
 
 import { ChevronDown, Menu } from "lucide-react";
 import { useState } from "react";
-import { TRAVEL_PROFILES } from "@/features/auth/constants/travel-profiles";
+import { PERFIL_FRASE } from "@/features/destinos/constants/rotulos";
 import type { PerfilViagem } from "@/features/auth/types/auth";
 import { Avatar, Logo } from "@/shared/components/ui";
 import {
@@ -20,15 +20,10 @@ type DashboardHeaderProps = {
 };
 
 function rotuloPerfil(perfil: PerfilViagem) {
-  return (
-    TRAVEL_PROFILES.find((item) => item.id === perfil)?.titulo ?? perfil
-  );
+  return `Viagem ${PERFIL_FRASE[perfil]}`;
 }
 
-export function DashboardHeader({
-  session,
-  onOpenMenu,
-}: DashboardHeaderProps) {
+export function DashboardHeader({ session, onOpenMenu }: DashboardHeaderProps) {
   const [perfilModalAberto, setPerfilModalAberto] = useState(false);
   const atualizarPerfil = useUpdatePerfilViagemMutation();
   const atualizarPreferencias = useUpdatePreferenciasMutation();
@@ -42,9 +37,7 @@ export function DashboardHeader({
       onClick={() => setPerfilModalAberto(true)}
       className="flex max-w-full cursor-pointer items-center gap-1 font-sans text-xs text-text-muted-400 transition-colors hover:text-ink"
     >
-      <span className="truncate">
-        Viagem em {rotuloPerfil(perfilViagem)}
-      </span>
+      <span className="truncate">{rotuloPerfil(perfilViagem)}</span>
       <ChevronDown
         className="h-3.5 w-3.5 shrink-0"
         strokeWidth={1.5}
@@ -55,7 +48,7 @@ export function DashboardHeader({
 
   return (
     <>
-      <header className="border-b border-surface-600 bg-paper">
+      <header className="sticky top-0 z-30 border-b border-surface-600 bg-paper">
         {/* Desktop: filtros à esquerda, identidade à direita. */}
         <div className="hidden items-center justify-between gap-4 px-6 py-3.5 lg:flex">
           <div className="flex items-center gap-2.5">
@@ -101,13 +94,13 @@ export function DashboardHeader({
             </button>
             {/* Largura explícita (não `w-auto`): assim a caixa da imagem
                 acompanha a logo desenhada e ela não invade a saudação. */}
-            <Logo variant="dark" className="h-auto w-32 shrink-0" />
+            <Logo variant="dark" className="h-auto w-28 shrink-0" />
           </div>
 
           <div className="flex shrink-0 items-center gap-2.5">
-            {/* Abaixo de 400px não cabe saudação + perfil + logo na mesma
+            {/* Abaixo de 360px não cabe saudação + perfil + logo na mesma
                 linha; o seletor de perfil continua acessível pelo avatar. */}
-            <div className="hidden min-w-0 flex-col items-end min-[400px]:flex">
+            <div className="hidden min-w-0 flex-col items-end min-[360px]:flex">
               <span className="truncate font-sans text-xs font-semibold text-ink">
                 Olá, {primeiroNome}!
               </span>
@@ -116,34 +109,35 @@ export function DashboardHeader({
             <button
               type="button"
               onClick={() => setPerfilModalAberto(true)}
-              aria-label={`Viagem em ${rotuloPerfil(perfilViagem)} — alterar perfil`}
-              className="cursor-pointer rounded-full min-[400px]:pointer-events-none"
+              aria-label={`${rotuloPerfil(perfilViagem)} — alterar perfil`}
+              className="cursor-pointer rounded-full min-[360px]:pointer-events-none"
             >
               <Avatar src={usuario.fotoUrl} nome={usuario.nome} size="sm" />
             </button>
           </div>
         </div>
-
-        {/* Mobile: filtros numa segunda linha, roláveis se faltar largura. */}
-        <div className="flex gap-2.5 overflow-x-auto border-t border-surface-600 px-4 py-2.5 lg:hidden">
-          <DateChip
-            value={preferencias.dataPrevista}
-            onChange={(dataPrevista) =>
-              atualizarPreferencias.mutate({ dataPrevista })
-            }
-          />
-          <BudgetChip
-            inicial={preferencias.orcamentoInicial}
-            final={preferencias.orcamentoFinal}
-            onChange={({ inicial, final }) =>
-              atualizarPreferencias.mutate({
-                orcamentoInicial: inicial,
-                orcamentoFinal: final,
-              })
-            }
-          />
-        </div>
       </header>
+
+      {/* Mobile: filtros numa segunda linha, roláveis se faltar largura. Ficam fora do
+            <header> fixo para rolarem junto com a página e não roubarem altura. */}
+      <div className="flex gap-2.5 overflow-x-auto border-b border-surface-600 bg-paper px-4 py-2 lg:hidden">
+        <DateChip
+          value={preferencias.dataPrevista}
+          onChange={(dataPrevista) =>
+            atualizarPreferencias.mutate({ dataPrevista })
+          }
+        />
+        <BudgetChip
+          inicial={preferencias.orcamentoInicial}
+          final={preferencias.orcamentoFinal}
+          onChange={({ inicial, final }) =>
+            atualizarPreferencias.mutate({
+              orcamentoInicial: inicial,
+              orcamentoFinal: final,
+            })
+          }
+        />
+      </div>
 
       <TravelProfileModal
         open={perfilModalAberto}

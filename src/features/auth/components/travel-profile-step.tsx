@@ -29,7 +29,7 @@ export function TravelProfileStep({
     <section className="flex w-full flex-col">
       <StepHeading
         title="Qual é o seu perfil de viagem?"
-        subtitle="A IA adapta as recomendações com base em quem acompanha você. Você pode alterar isso a qualquer momento no dashboard."
+        subtitle="Ajustamos as recomendações conforme quem acompanha você. Você pode alterar isso a qualquer momento no dashboard."
       />
 
       <form

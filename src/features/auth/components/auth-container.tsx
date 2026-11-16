@@ -23,10 +23,10 @@ export function AuthContainer({ children }: AuthContainerProps) {
 
           <div className="absolute inset-0 hidden flex-col justify-end p-8 lg:flex xl:p-10">
             <h2 className="font-serif text-3xl leading-tight text-paper xl:text-4xl">
-              Decida sua próxima jornada com inteligência
+              Decida sua próxima jornada com clareza
             </h2>
             <p className="mt-4 max-w-lg text-md leading-relaxed text-paper/85">
-              Nossa IA compara destinos, custos e experiências para você viajar
+              Compare destinos, custos e experiências lado a lado para viajar
               com mais clareza e menos risco.
             </p>
           </div>

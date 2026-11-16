@@ -6,13 +6,14 @@ type AvatarProps = {
   src?: string | null;
   /** Usado como `alt` da imagem e rótulo acessível do placeholder. */
   nome: string;
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "lg";
   className?: string;
 };
 
 const SIZES = {
   sm: { box: "h-9 w-9", icon: "h-4 w-4", px: 36 },
   md: { box: "h-10 w-10", icon: "h-5 w-5", px: 40 },
+  lg: { box: "h-20 w-20", icon: "h-8 w-8", px: 80 },
 } as const;
 
 /**

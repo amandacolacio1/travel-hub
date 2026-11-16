@@ -1,42 +1,43 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button, Input, StepHeading } from "@/shared/components/ui";
 import { useSignInMutation } from "@/shared/session/use-session-mutations";
-import { validateEmail, validatePassword } from "../utils/validation";
+import {
+  type LoginFormData,
+  loginSchema,
+} from "../schemas/login.schema";
 import { AuthIcon } from "./auth-icon";
 import { SocialAuth } from "./social-auth";
-
-type LoginFormData = {
-  email: string;
-  senha: string;
-};
 
 export function LoginForm() {
   const router = useRouter();
   const [senhaVisivel, setSenhaVisivel] = useState(false);
+  const [erroDeAcesso, setErroDeAcesso] = useState<string | null>(null);
   const signInMutation = useSignInMutation();
   const {
     register,
     handleSubmit,
-    setError,
     formState: { errors },
   } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
     defaultValues: { email: "", senha: "" },
-    mode: "onBlur",
+    mode: "onTouched",
   });
 
   async function handleLogin({ email, senha }: LoginFormData) {
+    setErroDeAcesso(null);
+
     try {
       await signInMutation.mutateAsync({ email, senha });
       router.push("/dashboard");
-    } catch {
-      setError("senha", {
-        type: "credenciais",
-        message: "E-mail ou senha inválidos",
-      });
+    } catch (erro) {
+      setErroDeAcesso(
+        erro instanceof Error ? erro.message : "E-mail ou senha inválidos",
+      );
     }
   }
 
@@ -56,7 +57,7 @@ export function LoginForm() {
           type="email"
           placeholder="seu@email.com"
           error={errors.email?.message}
-          {...register("email", { validate: validateEmail })}
+          {...register("email")}
         />
         <div className="flex flex-col gap-1.5">
           <Input
@@ -77,16 +78,27 @@ export function LoginForm() {
                 />
               </button>
             }
-            {...register("senha", { validate: validatePassword })}
+            {...register("senha")}
           />
           <span className="self-end text-xs font-medium text-text-muted-400 hover:text-ink">
             Esqueceu sua senha?
           </span>
         </div>
 
-        <p className="rounded-lg bg-surface-alt-500 px-3.5 py-2.5 font-sans text-xs text-text-muted-400">
-          Acesso de teste: <strong>amanda@travelhub.com</strong> / 12345678
-        </p>
+        {erroDeAcesso ? (
+          <p
+            role="alert"
+            className="rounded-lg bg-error-50 px-3.5 py-2.5 font-sans text-xs text-error-500"
+          >
+            {erroDeAcesso}
+          </p>
+        ) : null}
+
+        {process.env.NODE_ENV === "development" ? (
+          <p className="rounded-lg bg-surface-alt-500 px-3.5 py-2.5 font-sans text-xs text-text-muted-400">
+            Acesso de teste: <strong>amanda@travelhub.com</strong> / 12345678
+          </p>
+        ) : null}
 
         <div className="mt-4 flex flex-col gap-8">
           <Button

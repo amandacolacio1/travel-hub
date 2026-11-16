@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogOut, UserCog } from "lucide-react";
+import { LogOut, UserCog, X } from "lucide-react";
 import { Logo } from "@/shared/components/ui";
 import { NAV_ITEMS } from "../constants/navigation";
 
 type SidebarNavProps = {
   /** Chamado após navegar — o drawer mobile usa isso para se fechar. */
   onNavigate?: () => void;
+  /** Só no drawer mobile: mostra o botão de fechar. */
+  onClose?: () => void;
   onSignOut: () => void;
 };
 
@@ -16,19 +18,36 @@ type SidebarNavProps = {
  * Conteúdo da navegação lateral. Fica separado da `Sidebar` porque é
  * reaproveitado dentro do drawer mobile.
  */
-export function SidebarNav({ onNavigate, onSignOut }: SidebarNavProps) {
+export function SidebarNav({
+  onNavigate,
+  onClose,
+  onSignOut,
+}: SidebarNavProps) {
   const pathname = usePathname();
 
   return (
     <div className="flex h-full flex-col bg-brand-500 px-4 py-6 text-paper">
-      <Link
-        href="/dashboard"
-        onClick={onNavigate}
-        className="px-2"
-        aria-label="Travel Hub — ir para o dashboard"
-      >
-        <Logo variant="light" className="h-auto w-40" />
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link
+          href="/dashboard"
+          onClick={onNavigate}
+          className="px-2"
+          aria-label="Travel Hub — ir para o dashboard"
+        >
+          <Logo variant="light" className="h-auto w-40" />
+        </Link>
+
+        {onClose ? (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fechar menu"
+            className="cursor-pointer rounded-md p-1.5 text-paper/70 transition-colors hover:bg-paper/10 hover:text-paper"
+          >
+            <X className="h-5 w-5" strokeWidth={1.5} aria-hidden />
+          </button>
+        ) : null}
+      </div>
 
       <nav className="mt-10 flex flex-1 flex-col gap-1.5">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
@@ -43,7 +62,7 @@ export function SidebarNav({ onNavigate, onSignOut }: SidebarNavProps) {
               aria-current={ativo ? "page" : undefined}
               className={`flex items-center gap-3 rounded-lg px-3 py-2.5 font-sans text-sm transition-colors ${
                 ativo
-                  ? "bg-paper font-semibold text-brand-500"
+                  ? "bg-paper/10 font-semibold text-paper"
                   : "text-paper/70 hover:bg-paper/10 hover:text-paper"
               }`}
             >

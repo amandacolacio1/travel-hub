@@ -47,7 +47,8 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           session={session}
           onOpenMenu={() => setMenuAberto(true)}
         />
-        <main className="flex-1 p-4 lg:p-6">{children}</main>
+        {/* Padding padrão das páginas: 16px → 24px → 32px conforme a largura. */}
+        <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
       </div>
     </div>
   );

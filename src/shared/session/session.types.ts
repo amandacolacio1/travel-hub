@@ -15,6 +15,9 @@ export type Session = {
     email: string;
     /** `null` enquanto o usuário não enviou foto — a UI cai no placeholder. */
     fotoUrl: string | null;
+    /** País e cidade de origem; vazios até o usuário preencher no perfil. */
+    pais: string;
+    cidade: string;
   };
   preferencias: {
     interesses: string[];
