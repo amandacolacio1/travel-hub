@@ -3,7 +3,6 @@ import "server-only";
 import type { Destino } from "@/features/destinos/types/destino";
 import type { LiveConditions } from "@/features/destinos/types/live-conditions";
 import { prisma } from "@/server/db/prisma";
-import { fetchExchangeRate } from "@/server/external/frankfurter";
 import {
   type Coordenadas,
   fetchForecast,
@@ -18,9 +17,7 @@ import {
  */
 async function buscarCoordenadas(destino: Destino): Promise<Coordenadas | null> {
   const salvo = await prisma.destino.findUnique({
-    where: {
-      codigoPais_cidade: { codigoPais: destino.codigoPais, cidade: destino.cidade },
-    },
+    where: { slug: destino.slug },
     select: { id: true, latitude: true, longitude: true },
   });
 
@@ -28,7 +25,7 @@ async function buscarCoordenadas(destino: Destino): Promise<Coordenadas | null> 
     return { latitude: Number(salvo.latitude), longitude: Number(salvo.longitude) };
   }
 
-  const coordenadas = await geocodeCity(destino.cidade, destino.codigoPais);
+  const coordenadas = await geocodeCity(destino.cidade, destino.estado);
 
   if (coordenadas && salvo) {
     // Melhor esforço: se falhar, a próxima visita tenta de novo.
@@ -40,41 +37,12 @@ async function buscarCoordenadas(destino: Destino): Promise<Coordenadas | null> 
   return coordenadas;
 }
 
-async function buscarClima(destino: Destino): Promise<LiveConditions["clima"]> {
-  const coordenadas = await buscarCoordenadas(destino);
-  return coordenadas ? fetchForecast(coordenadas) : null;
-}
-
-async function buscarCambio(
-  destino: Destino,
-  moedaDoUsuario: string,
-): Promise<LiveConditions["cambio"]> {
-  const { codigo, base } = destino.moeda;
-  if (codigo === moedaDoUsuario) return null;
-
-  const cotacao = await fetchExchangeRate(codigo, moedaDoUsuario);
-  if (!cotacao) return null;
-
-  return {
-    de: codigo,
-    para: moedaDoUsuario,
-    base,
-    valor: cotacao.taxa * base,
-    data: cotacao.data,
-  };
-}
-
 /**
- * Clima (Open-Meteo) e câmbio (Frankfurter, para a moeda do usuário em
- * `preferencias.moeda`) em paralelo. Uma API fora do ar zera só a sua parte.
+ * Clima de agora e dos próximos 16 dias (Open-Meteo). Com a API fora do ar,
+ * `clima` vem `null` e a tela usa a média histórica.
  */
-export async function getLiveConditions(
-  destino: Destino,
-  moedaDoUsuario: string,
-): Promise<LiveConditions> {
-  const [clima, cambio] = await Promise.all([
-    buscarClima(destino).catch(() => null),
-    buscarCambio(destino, moedaDoUsuario).catch(() => null),
-  ]);
-  return { clima, cambio };
+export async function getLiveConditions(destino: Destino): Promise<LiveConditions> {
+  const coordenadas = await buscarCoordenadas(destino).catch(() => null);
+  const clima = coordenadas ? await fetchForecast(coordenadas).catch(() => null) : null;
+  return { clima };
 }

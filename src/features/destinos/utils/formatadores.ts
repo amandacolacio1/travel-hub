@@ -1,5 +1,4 @@
 import type { Destino, NivelCusto } from "../types/destino";
-import type { LiveConditions } from "../types/live-conditions";
 
 const MESES = [
   "Jan",
@@ -24,11 +23,6 @@ const brl = new Intl.NumberFormat("pt-BR", {
   maximumFractionDigits: 0,
 });
 
-const brlComCentavos = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-});
-
 export function formatarBRL(valor: number): string {
   return brl.format(valor);
 }
@@ -41,53 +35,10 @@ export function formatarNota(nota: number): string {
   });
 }
 
-export function formatarMoedaLocal(valor: number, codigo: string): string {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: codigo,
-    maximumFractionDigits: 0,
-  }).format(valor);
-}
-
-function capitalizar(texto: string): string {
-  return texto.charAt(0).toUpperCase() + texto.slice(1);
-}
-
-/** Nome da moeda em português (ex.: "EUR" → "Euro"). */
-export function nomeDaMoeda(codigo: string): string {
-  const nome = new Intl.DisplayNames(["pt-BR"], { type: "currency" }).of(codigo);
-  return capitalizar(nome ?? codigo);
-}
-
-/** Ex.: "1 EUR = R$ 5,80" ou "100 JPY = R$ 3,80". */
-export function descreverCotacao(moeda: Destino["moeda"]): string {
-  if (moeda.codigo === "BRL") return "Mesma moeda do Brasil";
-  return `${moeda.base} ${moeda.codigo} = ${brlComCentavos.format(moeda.cotacaoBRL)}`;
-}
-
 /** `"2026-11-16"` → `"16/11"`. */
 export function formatarDiaMes(iso: string): string {
   const [, mes, dia] = iso.split("-");
   return `${dia}/${mes}`;
-}
-
-/** Cotação do dia (Frankfurter), ex.: "100 JPY = R$ 3,57 · cotação de 16/11". */
-export function descreverCotacaoAoVivo(
-  cambio: NonNullable<LiveConditions["cambio"]>,
-): string {
-  const valor = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: cambio.para,
-  }).format(cambio.valor);
-
-  return `${cambio.base} ${cambio.de} = ${valor} · cotação de ${formatarDiaMes(cambio.data)}`;
-}
-
-/** Converte o código ISO do país na bandeira (regional indicators). */
-export function bandeira(codigoPais: string): string {
-  return [...codigoPais.toUpperCase()]
-    .map((letra) => String.fromCodePoint(0x1f1e6 + letra.charCodeAt(0) - 65))
-    .join("");
 }
 
 /** Ex.: [3, 4, 5] → "Mar – Mai". */

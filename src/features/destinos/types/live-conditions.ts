@@ -12,24 +12,14 @@ export type ClimaDoDia = {
 };
 
 /**
- * Dados ao vivo de um destino (`GET /api/destinos/[slug]/condicoes`). Cada
- * parte é `null` quando a API externa não respondeu ou não cobre o destino —
- * a tela então fica com os valores de referência do catálogo.
+ * Clima ao vivo de um destino (`GET /api/destinos/[slug]/condicoes`). É `null`
+ * quando a Open-Meteo não respondeu ou não achou a cidade — a tela então fica
+ * com a média histórica do catálogo.
  */
 export type LiveConditions = {
   clima: {
     atual: { temperaturaC: number; tipo: ClimaTipo; descricao: string };
     /** Próximos 16 dias, a partir de hoje. */
     dias: ClimaDoDia[];
-  } | null;
-  cambio: {
-    de: string;
-    para: string;
-    /** Quantidade de `de` a que `valor` se refere (ex.: 100 JPY). */
-    base: number;
-    /** Quanto `base` unidades de `de` valem em `para`. */
-    valor: number;
-    /** Dia da cotação (`yyyy-mm-dd`). */
-    data: string;
   } | null;
 };

@@ -16,7 +16,6 @@ import {
   compatibilidadeDaExperiencia,
   experienciaCombina,
 } from "@/features/destinos/utils/analise";
-import { bandeira } from "@/features/destinos/utils/formatadores";
 import {
   useSavedTourIds,
   useToggleSavedTourMutation,
@@ -84,7 +83,7 @@ export function ExplorarView() {
     <Page>
       <PageHeader
         eyebrow="Explore o inesperado"
-        title={`${destino.cidade}, ${destino.pais}`}
+        title={`${destino.cidade}, ${destino.uf}`}
         description="Experiências selecionadas para o seu perfil de viagem."
         actions={
           <div className="w-full sm:w-64">
@@ -92,8 +91,7 @@ export function ExplorarView() {
               value={destino.slug}
               options={(destinos ?? []).map((item) => ({
                 value: item.slug,
-                label: item.cidade,
-                prefix: bandeira(item.codigoPais),
+                label: `${item.cidade}, ${item.uf}`,
               }))}
               onChange={(slug) => router.replace(`${pathname}?destino=${slug}`)}
               searchPlaceholder="Buscar destino"

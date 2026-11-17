@@ -30,7 +30,7 @@ export type Experiencia = {
   categoria: ExperienciaCategoria;
   /** Para quais perfis de viagem a experiência faz sentido. */
   perfis: PerfilViagem[];
-  /** Na moeda local do destino. */
+  /** Em reais. */
   preco: number;
   duracao: string;
   nivel: string;
@@ -40,10 +40,12 @@ export type Experiencia = {
 export type Destino = {
   slug: string;
   cidade: string;
-  pais: string;
-  /** ISO 3166-1 alfa-2 (ex.: "PT"); a bandeira é derivada dele. */
-  codigoPais: string;
-  continente: string;
+  /** Sigla do estado, ex.: "RJ". */
+  uf: string;
+  /** Nome do estado, ex.: "Rio de Janeiro". */
+  estado: string;
+  /** Região do IBGE, ex.: "Sudeste". */
+  regiao: string;
   tema: string;
   frase: string;
   resumo: string;
@@ -62,13 +64,6 @@ export type Destino = {
     estacao: string;
     /** Meses (1–12) em ordem cronológica. */
     meses: number[];
-  };
-  moeda: {
-    codigo: string;
-    /** Quantidade de moeda local a que a cotação se refere (ex.: 100 JPY). */
-    base: number;
-    /** Valor de referência em reais para `base` unidades. */
-    cotacaoBRL: number;
   };
   /** Referência por pessoa, hospedagem + alimentação, em reais. */
   custoDiarioBRL: number;

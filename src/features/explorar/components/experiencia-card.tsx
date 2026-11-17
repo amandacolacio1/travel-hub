@@ -3,7 +3,7 @@ import { Badge, Card, CoverImage, Eyebrow } from "@/shared/components/ui";
 import { TRAVEL_PROFILES } from "@/features/auth/constants/travel-profiles";
 import { CATEGORIAS_EXPERIENCIA } from "@/features/destinos/constants/rotulos";
 import type { Destino, Experiencia } from "@/features/destinos/types/destino";
-import { formatarMoedaLocal } from "@/features/destinos/utils/formatadores";
+import { formatarBRL } from "@/features/destinos/utils/formatadores";
 import { SaveTourButton } from "./save-tour-button";
 
 type ExperienciaCardProps = {
@@ -78,7 +78,7 @@ export function ExperienciaCard({
               <div className="flex shrink-0 flex-col items-end">
                 <Eyebrow className="text-[9px]">A partir de</Eyebrow>
                 <span className="font-serif text-xl text-ink">
-                  {formatarMoedaLocal(experiencia.preco, destino.moeda.codigo)}
+                  {formatarBRL(experiencia.preco)}
                 </span>
               </div>
             </div>

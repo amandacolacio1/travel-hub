@@ -4,9 +4,9 @@ import type { Prisma } from "@/generated/prisma/client";
 import type { DestinoResolvido } from "./resolve-destination";
 
 /**
- * O "upsert" do PDF: procura em `destinos` por `codigo_pais + cidade` e cria
- * se não existir. Em linhas que já existem, completa moeda e bandeira — mas
- * nunca as apaga com `null`.
+ * O "upsert" do PDF: procura em `destinos` pelo código IBGE do município e
+ * cria se não existir. Linhas existentes não mudam — coordenadas e ficha são
+ * preenchidas por quem as busca.
  *
  * @returns id do destino.
  */
@@ -15,13 +15,8 @@ export async function upsertDestination(
   destino: DestinoResolvido,
 ): Promise<string> {
   const { id } = await tx.destino.upsert({
-    where: {
-      codigoPais_cidade: { codigoPais: destino.codigoPais, cidade: destino.cidade },
-    },
-    update: {
-      bandeiraUrl: destino.bandeiraUrl,
-      ...(destino.moeda && { moeda: destino.moeda }),
-    },
+    where: { ibgeId: destino.ibgeId },
+    update: {},
     create: destino,
     select: { id: true },
   });

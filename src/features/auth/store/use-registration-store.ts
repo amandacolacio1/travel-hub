@@ -33,7 +33,7 @@ const initialState = {
   account: { nome: "", email: "", senha: "" },
   preferences: {
     interesses: ["natureza"],
-    destinos: [{ pais: "Brasil", cidade: "" }],
+    destinos: [{ uf: "", cidade: "" }],
     orcamentoInicial: 5000,
     orcamentoFinal: 12000,
     dataPrevista: "",

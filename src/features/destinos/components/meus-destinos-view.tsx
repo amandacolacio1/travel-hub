@@ -94,7 +94,6 @@ export function MeusDestinosView() {
       <AdicionarDestinoModal
         open={modalAberto}
         onOpenChange={setModalAberto}
-        catalogo={meus.catalogo}
         sugestoes={meus.sugestoes}
         perfilViagem={meus.perfilViagem}
         limite={{ vagas: meus.vagas, max: MAX_DESTINOS_SALVOS }}

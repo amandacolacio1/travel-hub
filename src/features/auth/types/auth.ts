@@ -1,7 +1,9 @@
 export type AuthStep = 1 | 2 | 3;
 
+/** Cidade brasileira escolhida pelo usuário; o servidor confere no IBGE. */
 export type DestinoDesejado = {
-  pais: string;
+  /** Sigla do estado, ex.: "BA". */
+  uf: string;
   cidade: string;
 };
 

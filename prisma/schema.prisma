@@ -103,20 +103,23 @@ model UsuarioInteresse {
 /// Cópia compartilhada de um destino. Só entra quando alguém salva (upsert
 /// por `codigoPais + cidade`). Os campos opcionais são preenchidos quando a
 /// integração com a API de países estiver pronta.
+/// Cidade brasileira. A chave é o código do município no IBGE; `slug`
+/// (ex.: "sao-paulo-sp") é o identificador usado nas URLs.
 model Destino {
-  id          String   @id @default(uuid()) @db.Uuid
-  codigoPais  String   @map("codigo_pais") @db.Char(2)
-  pais        String
-  cidade      String
-  bandeiraUrl String?  @map("bandeira_url")
-  moeda       String?  @db.Char(3)
-  latitude    Decimal? @db.Decimal(9, 6)
-  longitude   Decimal? @db.Decimal(9, 6)
+  id        String   @id @default(uuid()) @db.Uuid
+  slug      String   @unique
+  ibgeId    Int      @unique @map("ibge_id")
+  uf        String   @db.Char(2)
+  estado    String
+  regiao    String
+  cidade    String
+  latitude  Decimal? @db.Decimal(9, 6)
+  longitude Decimal? @db.Decimal(9, 6)
 
   viagens  Viagem[]
   passeios Passeio[]
 
-  @@unique([codigoPais, cidade])
+  @@index([uf])
   @@map("destinos")
 }
 

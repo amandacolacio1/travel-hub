@@ -9,7 +9,8 @@ import {
   SearchableSelect,
   StepHeading,
 } from "@/shared/components/ui";
-import { DESTINATIONS, MAX_DESTINATIONS } from "../constants/destinations";
+import { useCities, useStates } from "@/shared/locations";
+import { MAX_DESTINATIONS } from "../constants/destinations";
 import { INTERESTS } from "../constants/interests";
 import type { PreferencesFormData } from "../store/use-registration-store";
 import { getTodayISO, validateFutureDate } from "../utils/date";
@@ -24,44 +25,44 @@ type PreferencesStepProps = {
 
 function DestinationRow({
   index,
-  pais,
-  onPaisChange,
+  uf,
+  onUfChange,
   onRemove,
   canRemove,
   control,
 }: {
   index: number;
-  pais: string;
-  onPaisChange: () => void;
+  uf: string;
+  onUfChange: () => void;
   onRemove: () => void;
   canRemove: boolean;
   control: Control<PreferencesFormData>;
 }) {
-  const cidades =
-    DESTINATIONS.find((item) => item.nome === pais)?.cidades.map((item) => ({
-      value: item,
-      label: item,
-    })) ?? [];
+  const estados = useStates();
+  const cidades = useCities(uf);
 
   return (
     <div className="flex w-full items-start gap-2">
       <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
         <Controller
           control={control}
-          name={`destinos.${index}.pais`}
+          name={`destinos.${index}.uf`}
           render={({ field }) => (
             <SearchableSelect
-              label="País"
-              placeholder="País"
-              searchPlaceholder="Pesquisar país"
+              label="Estado"
+              placeholder={estados.isPending ? "Carregando…" : "Estado"}
+              searchPlaceholder="Pesquisar estado"
+              emptyMessage={
+                estados.isError ? "Não foi possível carregar os estados" : undefined
+              }
               value={field.value}
               onChange={(value) => {
                 field.onChange(value);
-                onPaisChange();
+                onUfChange();
               }}
-              options={DESTINATIONS.map((item) => ({
-                value: item.nome,
-                label: item.nome,
+              options={(estados.data ?? []).map((estado) => ({
+                value: estado.uf,
+                label: estado.nome,
               }))}
             />
           )}
@@ -72,12 +73,18 @@ function DestinationRow({
           render={({ field }) => (
             <SearchableSelect
               label="Cidade"
-              placeholder="Cidade"
+              placeholder={uf && cidades.isPending ? "Carregando…" : "Cidade"}
               searchPlaceholder="Pesquisar cidade"
+              emptyMessage={
+                cidades.isError ? "Não foi possível carregar as cidades" : undefined
+              }
               value={field.value}
               onChange={field.onChange}
-              options={cidades}
-              disabled={!pais}
+              options={(cidades.data ?? []).map((cidade) => ({
+                value: cidade.nome,
+                label: cidade.nome,
+              }))}
+              disabled={!uf}
             />
           )}
         />
@@ -187,8 +194,8 @@ export function PreferencesStep({
             <DestinationRow
               key={field.id}
               index={index}
-              pais={destinos?.[index]?.pais ?? ""}
-              onPaisChange={() => setValue(`destinos.${index}.cidade`, "")}
+              uf={destinos?.[index]?.uf ?? ""}
+              onUfChange={() => setValue(`destinos.${index}.cidade`, "")}
               onRemove={() => remove(index)}
               canRemove={fields.length > 1}
               control={control}
@@ -198,7 +205,7 @@ export function PreferencesStep({
           {fields.length < MAX_DESTINATIONS ? (
             <button
               type="button"
-              onClick={() => append({ pais: "Brasil", cidade: "" })}
+              onClick={() => append({ uf: "", cidade: "" })}
               className="flex w-fit cursor-pointer items-center gap-1.5 text-sm font-medium text-brand-500 hover:underline"
             >
               + Adicionar destino

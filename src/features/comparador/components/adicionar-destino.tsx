@@ -1,7 +1,6 @@
 import { MapPin } from "lucide-react";
 import { Chip, Eyebrow, SearchableSelect } from "@/shared/components/ui";
 import type { Destino } from "@/features/destinos/types/destino";
-import { bandeira } from "@/features/destinos/utils/formatadores";
 import { MAX_COMPARADOR } from "../hooks/use-comparador";
 
 type AdicionarDestinoProps = {
@@ -29,14 +28,13 @@ export function AdicionarDestino({
             value=""
             disabled={cheio}
             placeholder={
-              cheio ? "Limite de destinos atingido" : "Buscar por cidade ou país…"
+              cheio ? "Limite de destinos atingido" : "Buscar por cidade ou estado…"
             }
             searchPlaceholder="Buscar destino"
             emptyMessage="Nenhum destino disponível"
             options={disponiveis.map((destino) => ({
               value: destino.slug,
-              label: `${destino.cidade}, ${destino.pais}`,
-              prefix: bandeira(destino.codigoPais),
+              label: `${destino.cidade}, ${destino.uf}`,
             }))}
             onChange={onAdicionar}
           />

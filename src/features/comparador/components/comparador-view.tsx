@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Page, PageHeader, StateMessage } from "@/shared/components/ui";
 import { AdicionarDestinoModal } from "@/features/destinos/components/adicionar-destino-modal";
+import { slugDoDestino } from "@/features/destinos/utils/catalogo";
 import { MAX_COMPARADOR, useComparador } from "../hooks/use-comparador";
 import { montarResumo } from "../utils/resumo";
 import { AdicionarDestino } from "./adicionar-destino";
@@ -63,14 +64,15 @@ export function ComparadorView() {
       <AdicionarDestinoModal
         open={modalAberto && !comparador.cheio}
         onOpenChange={setModalAberto}
-        catalogo={comparador.disponiveis}
         sugestoes={comparador.sugestoes}
         perfilViagem={session.perfilViagem}
         limite={{
           vagas: MAX_COMPARADOR - selecionados.length,
           max: MAX_COMPARADOR,
         }}
-        onAdicionar={(destino) => comparador.adicionar(destino.slug)}
+        onAdicionar={(destino) =>
+          comparador.adicionar(slugDoDestino(destino.cidade, destino.uf))
+        }
       />
     </Page>
   );

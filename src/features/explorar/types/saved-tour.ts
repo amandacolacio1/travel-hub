@@ -5,11 +5,10 @@ export type SavedTour = {
   titulo: string;
   descricao: string;
   categoria: string;
-  /** Na moeda local do destino (`moeda`). */
+  /** Em reais. */
   preco: number;
-  moeda: string | null;
   imagemUrl: string | null;
-  destino: { codigoPais: string; pais: string; cidade: string };
+  destino: { slug: string; uf: string; cidade: string };
   /** ISO 8601. */
   salvoEm: string;
 };

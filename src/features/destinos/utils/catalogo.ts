@@ -10,21 +10,25 @@ export function normalizar(texto: string): string {
     .toLowerCase();
 }
 
-/** Destino do catálogo que corresponde a um destino escolhido no cadastro. */
-export function encontrarDestino(
-  catalogo: Destino[],
-  { pais, cidade }: DestinoDesejado,
-): Destino | undefined {
-  return catalogo.find(
-    (destino) =>
-      normalizar(destino.cidade) === normalizar(cidade) &&
-      normalizar(destino.pais) === normalizar(pais),
-  );
+/** `("São Paulo", "SP")` → `"sao-paulo-sp"`. A UF evita colisão entre homônimas. */
+export function slugDoDestino(cidade: string, uf: string): string {
+  const base = normalizar(cidade)
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  return `${base}-${uf.toLowerCase()}`;
 }
 
 export function mesmoDestino(a: DestinoDesejado, b: DestinoDesejado): boolean {
   return (
     normalizar(a.cidade) === normalizar(b.cidade) &&
-    normalizar(a.pais) === normalizar(b.pais)
+    a.uf.toUpperCase() === b.uf.toUpperCase()
   );
+}
+
+/** Destino do catálogo que corresponde a um destino escolhido no cadastro. */
+export function encontrarDestino(
+  catalogo: Destino[],
+  desejado: DestinoDesejado,
+): Destino | undefined {
+  return catalogo.find((destino) => mesmoDestino(destino, desejado));
 }

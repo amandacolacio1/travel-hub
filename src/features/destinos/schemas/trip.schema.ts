@@ -8,9 +8,16 @@ export const tripStatusSchema = z.enum([
   "realizada",
 ]) satisfies z.ZodType<TripStatus>;
 
-/** Corpo do `POST /api/viagens`. O código do país é decidido no servidor. */
+/** Sigla de estado: duas letras. Se o estado existe, quem decide é o IBGE. */
+export const ufSchema = z
+  .string()
+  .trim()
+  .regex(/^[A-Za-z]{2}$/, "Estado inválido")
+  .transform((uf) => uf.toUpperCase());
+
+/** Corpo do `POST /api/viagens`. A cidade é conferida no IBGE pelo servidor. */
 export const createTripSchema = z.object({
-  pais: z.string().trim().min(1, "Informe o país").max(80),
+  uf: ufSchema,
   cidade: z.string().trim().min(1, "Informe a cidade").max(80),
   dataPrevista: dataPrevistaSchema.optional(),
 });

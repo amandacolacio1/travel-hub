@@ -2,6 +2,7 @@ import "server-only";
 
 import type { ClimaTipo } from "@/features/destinos/types/destino";
 import type { LiveConditions } from "@/features/destinos/types/live-conditions";
+import { normalizar } from "@/features/destinos/utils/catalogo";
 import { fetchJson } from "./fetch-json";
 
 /** Coordenadas de cidade praticamente não mudam. */
@@ -12,25 +13,39 @@ const CACHE_PREVISAO_S = 30 * 60;
 export type Coordenadas = { latitude: number; longitude: number };
 
 type RespostaGeocoding = {
-  results?: { latitude: number; longitude: number }[];
+  results?: {
+    name: string;
+    latitude: number;
+    longitude: number;
+    /** Estado, no caso do Brasil (ex.: "Mato Grosso do Sul"). */
+    admin1?: string;
+  }[];
 };
 
-/** Latitude e longitude da cidade (não do país). `null` se não achar. */
+/**
+ * Latitude e longitude de uma cidade brasileira. Filtra pelo estado porque
+ * há homônimas: o primeiro "Bonito" da busca é o de Pernambuco, não o do MS.
+ * `null` se não achar a cidade naquele estado.
+ */
 export async function geocodeCity(
   cidade: string,
-  codigoPais: string,
+  estado: string,
 ): Promise<Coordenadas | null> {
   const url = new URL("https://geocoding-api.open-meteo.com/v1/search");
   url.search = new URLSearchParams({
     name: cidade,
-    count: "1",
+    count: "20",
     language: "pt",
-    countryCode: codigoPais,
+    countryCode: "BR",
   }).toString();
 
   const dados = await fetchJson<RespostaGeocoding>(url.toString(), CACHE_GEOCODING_S);
-  const [primeiro] = dados?.results ?? [];
-  return primeiro ? { latitude: primeiro.latitude, longitude: primeiro.longitude } : null;
+  const local = dados?.results?.find(
+    (item) =>
+      normalizar(item.name) === normalizar(cidade) &&
+      normalizar(item.admin1 ?? "") === normalizar(estado),
+  );
+  return local ? { latitude: local.latitude, longitude: local.longitude } : null;
 }
 
 /**

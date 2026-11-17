@@ -5,7 +5,7 @@ import { MAX_DESTINATIONS } from "@/features/auth/constants/destinations";
 import type { DestinoDesejado, PerfilViagem } from "@/features/auth/types/auth";
 import {
   type DestinoResolvido,
-  resolveDestination,
+  resolveDestinationOrThrow,
 } from "@/server/destinations/resolve-destination";
 import { upsertDestination } from "@/server/destinations/upsert-destination";
 import { HttpError } from "@/server/http/http-error";
@@ -41,34 +41,40 @@ export async function replaceInterests(tx: Tx, usuarioId: string, slugs: string[
 }
 
 /**
- * Faz a tabela `viagens` refletir a lista `destinos` da sessão: cria as que
- * entraram (com upsert em `destinos`) e apaga as que saíram. As que já
- * existiam ficam intactas, preservando status e data de criação.
+ * Confere no IBGE os destinos que o front enviou (linhas sem cidade são
+ * ignoradas) e aplica o limite. Faz chamadas de rede: rode antes da transação.
+ */
+export async function resolveDesiredDestinations(
+  destinos: DestinoDesejado[],
+): Promise<DestinoResolvido[]> {
+  const preenchidos = destinos.filter(({ uf, cidade }) => uf.trim() && cidade.trim());
+  const resolvidos = await Promise.all(
+    preenchidos.map(({ uf, cidade }) => resolveDestinationOrThrow(uf, cidade)),
+  );
+
+  // Mesma cidade duas vezes conta uma só.
+  const unicos = [...new Map(resolvidos.map((d) => [d.ibgeId, d])).values()];
+
+  // Regra do servidor, não só da tela: o front pode ser burlado.
+  if (unicos.length > MAX_DESTINATIONS) {
+    throw new HttpError(422, `Você pode salvar até ${MAX_DESTINATIONS} destinos.`);
+  }
+
+  return unicos;
+}
+
+/**
+ * Faz a tabela `viagens` refletir a lista de destinos: cria as que entraram
+ * (com upsert em `destinos`) e apaga as que saíram. As que já existiam ficam
+ * intactas, preservando status e data de criação.
  */
 export async function syncTrips(
   tx: Tx,
   usuarioId: string,
-  destinos: DestinoDesejado[],
+  destinos: DestinoResolvido[],
 ) {
-  const resolvidos = new Map<string, DestinoResolvido>();
-
-  for (const { pais, cidade } of destinos) {
-    // O wizard começa com uma linha "Brasil / (vazio)"; linha sem cidade não é destino.
-    if (!cidade.trim()) continue;
-
-    const destino = resolveDestination(pais, cidade);
-    if (!destino) throw new HttpError(400, `País não reconhecido: ${pais}`);
-
-    resolvidos.set(`${destino.codigoPais}:${destino.cidade}`, destino);
-  }
-
-  // Regra do servidor, não só da tela: o front pode ser burlado.
-  if (resolvidos.size > MAX_DESTINATIONS) {
-    throw new HttpError(422, `Você pode salvar até ${MAX_DESTINATIONS} destinos.`);
-  }
-
   const destinoIds: string[] = [];
-  for (const destino of resolvidos.values()) {
+  for (const destino of destinos) {
     destinoIds.push(await upsertDestination(tx, destino));
   }
 

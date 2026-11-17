@@ -10,8 +10,10 @@ export type Trip = {
   /** ISO 8601. */
   criadoEm: string;
   destino: {
-    codigoPais: string;
-    pais: string;
+    slug: string;
+    /** Sigla do estado, ex.: "BA". */
+    uf: string;
+    estado: string;
     cidade: string;
   };
 };

@@ -1,11 +1,11 @@
 import type { Destino } from "@/features/destinos/types/destino";
 
 export const rioDeJaneiro: Destino = {
-  slug: "rio-de-janeiro",
+  slug: "rio-de-janeiro-rj",
   cidade: "Rio de Janeiro",
-  pais: "Brasil",
-  codigoPais: "BR",
-  continente: "América do Sul",
+  uf: "RJ",
+  estado: "Rio de Janeiro",
+  regiao: "Sudeste",
   tema: "Natureza & Cultura Carioca",
   frase: "Montanha, mar e música em uma só paisagem.",
   resumo:
@@ -22,7 +22,6 @@ export const rioDeJaneiro: Destino = {
     diasChuvososPct: 35,
   },
   melhorEpoca: { estacao: "Outono", meses: [4, 5, 6] },
-  moeda: { codigo: "BRL", base: 1, cotacaoBRL: 1 },
   custoDiarioBRL: 340,
   afinidade: {
     natureza: 10,

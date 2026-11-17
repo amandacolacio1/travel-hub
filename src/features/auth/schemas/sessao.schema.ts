@@ -4,8 +4,9 @@ import { emailSchema } from "./senha.schema";
 
 export const perfilViagemSchema = z.enum(["sozinho", "casal", "familia"]);
 
+/** Linha do wizard; pode vir vazia (o servidor ignora linhas sem cidade). */
 const destinoSchema = z.object({
-  pais: z.string().trim().max(80),
+  uf: z.string().trim().max(2),
   cidade: z.string().trim().max(80),
 });
 

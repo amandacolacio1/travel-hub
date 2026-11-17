@@ -21,20 +21,20 @@ export function DestinoSalvoCard({
   onMudarStatus,
   onRemover,
 }: DestinoSalvoCardProps) {
-  const { pais, cidade } = viagem.destino;
+  const { estado, cidade } = viagem.destino;
 
   return (
     <Card padding="none" className="flex w-full flex-col overflow-hidden">
       <CoverImage
         src={destino?.imagem}
-        alt={`${cidade}, ${pais}`}
+        alt={`${cidade}, ${estado}`}
         sizes="(min-width: 1280px) 30vw, (min-width: 640px) 45vw, 100vw"
         className="h-36 w-full"
       >
         {destino ? (
           <>
             <Badge tone="dark" className="absolute top-3 left-3">
-              {destino.continente}
+              {destino.regiao}
             </Badge>
             <Badge tone="glass" className="absolute top-3 right-3">
               <Star className="h-3 w-3 fill-current" strokeWidth={1.5} aria-hidden />
@@ -49,8 +49,8 @@ export function DestinoSalvoCard({
           <h3 className="font-serif text-xl text-ink">{cidade}</h3>
           <p className="font-sans text-xs text-text-muted-400">
             {destino
-              ? `${destino.pais} • ${destino.tema}`
-              : `${pais} • Ainda sem detalhes no catálogo`}
+              ? `${estado} • ${destino.tema}`
+              : `${estado} • Ainda sem detalhes no catálogo`}
           </p>
         </div>
 

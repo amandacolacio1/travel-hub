@@ -8,7 +8,7 @@ import type {
 } from "@/features/destinos/schemas/trip.schema";
 import type { Trip, TripStatus } from "@/features/destinos/types/trip";
 import { prisma } from "@/server/db/prisma";
-import { resolveDestination } from "@/server/destinations/resolve-destination";
+import { resolveDestinationOrThrow } from "@/server/destinations/resolve-destination";
 import { upsertDestination } from "@/server/destinations/upsert-destination";
 import { HttpError } from "@/server/http/http-error";
 import { toDbDate } from "@/server/users/profile-writes";
@@ -34,8 +34,9 @@ function toPublicTrip(viagem: ViagemComDestino): Trip {
     dataPrevista: viagem.dataPrevista?.toISOString().slice(0, 10) ?? "",
     criadoEm: viagem.criadoEm.toISOString(),
     destino: {
-      codigoPais: viagem.destino.codigoPais,
-      pais: viagem.destino.pais,
+      slug: viagem.destino.slug,
+      uf: viagem.destino.uf,
+      estado: viagem.destino.estado,
       cidade: viagem.destino.cidade,
     },
   };
@@ -90,10 +91,10 @@ export async function listTrips(usuarioId: string): Promise<Trip[]> {
  */
 export async function createTrip(
   usuarioId: string,
-  { pais, cidade, dataPrevista }: CreateTripPayload,
+  { uf, cidade, dataPrevista }: CreateTripPayload,
 ): Promise<Trip> {
-  const destino = resolveDestination(pais, cidade);
-  if (!destino) throw new HttpError(400, `País não reconhecido: ${pais}`);
+  // Confere a cidade no IBGE antes de abrir a transação (é chamada de rede).
+  const destino = await resolveDestinationOrThrow(uf, cidade);
 
   const { id } = await prisma.$transaction(
     async (tx) => {

@@ -2,7 +2,6 @@ import { ArrowRight } from "lucide-react";
 import { Badge, ButtonLink, CoverImage, Eyebrow } from "@/shared/components/ui";
 import type { DestinoComScore } from "@/features/destinos/types/destino";
 import {
-  bandeira,
   formatarBRL,
   periodoDosMeses,
   temperaturaMedia,
@@ -26,7 +25,7 @@ export function DestaqueHero({ item }: { item: DestinoComScore }) {
   return (
     <CoverImage
       src={destino.imagem}
-      alt={`${destino.cidade}, ${destino.pais}`}
+      alt={`${destino.cidade}, ${destino.estado}`}
       sizes="(min-width: 1024px) 70vw, 100vw"
       priority
       className="flex min-h-[22rem] flex-col justify-end rounded-card shadow-card lg:min-h-[24rem]"
@@ -44,7 +43,7 @@ export function DestaqueHero({ item }: { item: DestinoComScore }) {
           </div>
 
           <h2 className="font-serif text-3xl text-paper">
-            {destino.cidade}, {destino.pais} {bandeira(destino.codigoPais)}
+            {destino.cidade}, {destino.uf}
           </h2>
           <p className="font-sans text-sm leading-relaxed font-semibold text-paper">
             {destino.resumo}

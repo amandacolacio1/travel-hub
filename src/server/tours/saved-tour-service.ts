@@ -4,7 +4,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import type { Destino, Experiencia } from "@/features/destinos/types/destino";
 import type { SavedTour } from "@/features/explorar/types/saved-tour";
 import { prisma } from "@/server/db/prisma";
-import { resolveDestination } from "@/server/destinations/resolve-destination";
+import { resolveDestinationOrThrow } from "@/server/destinations/resolve-destination";
 import { upsertDestination } from "@/server/destinations/upsert-destination";
 import { listarDestinos } from "@/server/destinos/catalogo";
 import { HttpError } from "@/server/http/http-error";
@@ -24,11 +24,10 @@ function toPublicSavedTour({ passeio, criadoEm }: SalvoCompleto): SavedTour {
     descricao: passeio.descricao,
     categoria: passeio.categoria,
     preco: Number(passeio.preco),
-    moeda: passeio.destino.moeda,
     imagemUrl: passeio.imagemUrl,
     destino: {
-      codigoPais: passeio.destino.codigoPais,
-      pais: passeio.destino.pais,
+      slug: passeio.destino.slug,
+      uf: passeio.destino.uf,
       cidade: passeio.destino.cidade,
     },
     salvoEm: criadoEm.toISOString(),
@@ -72,8 +71,8 @@ export async function saveTour(usuarioId: string, apiId: string): Promise<SavedT
   if (!fonte) throw new HttpError(404, "Passeio não encontrado");
 
   const { experiencia, destino } = fonte;
-  // O destino do catálogo é sempre conhecido; `!` documenta essa garantia.
-  const destinoResolvido = resolveDestination(destino.pais, destino.cidade)!;
+  // Rede (IBGE) antes da transação, como em viagens.
+  const destinoResolvido = await resolveDestinationOrThrow(destino.uf, destino.cidade);
   const dadosDoPasseio = {
     titulo: experiencia.titulo,
     descricao: experiencia.descricao,

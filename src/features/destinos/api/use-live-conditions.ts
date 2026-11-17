@@ -11,12 +11,12 @@ async function fetchLiveConditions(slug: string): Promise<LiveConditions> {
     credentials: "same-origin",
   });
   if (resposta.status === 401) throw new UnauthorizedError();
-  if (!resposta.ok) throw new Error("Não foi possível carregar clima e câmbio");
+  if (!resposta.ok) throw new Error("Não foi possível carregar o clima");
   return resposta.json();
 }
 
 /**
- * Clima e câmbio ao vivo de um destino do catálogo. É um complemento: a tela
+ * Clima ao vivo de um destino do catálogo. É um complemento: a tela
  * renderiza com os valores de referência enquanto isto carrega ou se falhar,
  * então não há estado de loading/erro para tratar em quem usa.
  */

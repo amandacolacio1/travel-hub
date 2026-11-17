@@ -4,7 +4,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { Clock, Gauge, Heart, X } from "lucide-react";
 import { Badge, Button, CoverImage, Eyebrow } from "@/shared/components/ui";
 import type { Destino, Experiencia } from "@/features/destinos/types/destino";
-import { formatarMoedaLocal } from "@/features/destinos/utils/formatadores";
+import { formatarBRL } from "@/features/destinos/utils/formatadores";
 import { rotuloCategoria } from "./experiencia-card";
 
 export type ExperienciaSelecionada = {
@@ -88,7 +88,7 @@ export function ExperienciaModal({
                 <p className="font-sans text-sm text-ink">
                   <span className="text-text-muted-400">A partir de </span>
                   <strong className="font-semibold">
-                    {formatarMoedaLocal(item.experiencia.preco, destino.moeda.codigo)}
+                    {formatarBRL(item.experiencia.preco)}
                   </strong>
                 </p>
 

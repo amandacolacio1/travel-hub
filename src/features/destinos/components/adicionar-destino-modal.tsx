@@ -2,24 +2,24 @@
 
 import { useMemo, useState } from "react";
 import { TRAVEL_PROFILES } from "@/features/auth/constants/travel-profiles";
-import type { PerfilViagem } from "@/features/auth/types/auth";
-import { Button, Eyebrow, Modal, Select } from "@/shared/components/ui";
-import type { Destino, DestinoComScore } from "../types/destino";
+import type { DestinoDesejado, PerfilViagem } from "@/features/auth/types/auth";
+import { Button, Eyebrow, Modal, SearchableSelect } from "@/shared/components/ui";
+import { useCities, useStates } from "@/shared/locations";
+import type { DestinoComScore } from "../types/destino";
 
 const MAX_SUGESTOES = 4;
 
 type AdicionarDestinoModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  catalogo: Destino[];
   sugestoes: DestinoComScore[];
   perfilViagem?: PerfilViagem;
   /** Quantas vagas ainda restam na lista e o máximo permitido. */
   limite?: { vagas: number; max: number };
-  onAdicionar: (destino: Destino) => void;
+  onAdicionar: (destino: DestinoDesejado) => void;
 };
 
-/** Escolha de país → cidade, com atalhos para os destinos que mais combinam. */
+/** Escolha de estado → cidade (IBGE), com atalhos para os destinos que mais combinam. */
 export function AdicionarDestinoModal(props: AdicionarDestinoModalProps) {
   const { open, onOpenChange } = props;
 
@@ -39,68 +39,70 @@ export function AdicionarDestinoModal(props: AdicionarDestinoModalProps) {
 
 function descricao(perfil?: PerfilViagem): string {
   const titulo = TRAVEL_PROFILES.find((item) => item.id === perfil)?.titulo;
-  const base = "Escolha um país e uma cidade para adicionar à sua lista.";
+  const base = "Escolha um estado e uma cidade do Brasil para adicionar à sua lista.";
 
   return titulo
-    ? `${base} Calculamos clima, câmbio e custo para o seu perfil ${titulo.toLowerCase()}.`
+    ? `${base} Calculamos clima e custo para o seu perfil ${titulo.toLowerCase()}.`
     : base;
 }
 
 function Formulario({
   onOpenChange,
-  catalogo,
   sugestoes,
   limite,
   onAdicionar,
 }: AdicionarDestinoModalProps) {
-  const [pais, setPais] = useState("");
-  const [slug, setSlug] = useState("");
+  const [uf, setUf] = useState("");
+  const [cidade, setCidade] = useState("");
+  const estados = useStates();
+  const cidades = useCities(uf);
 
-  const paises = useMemo(
-    () => [...new Set(catalogo.map((destino) => destino.pais))].sort(),
-    [catalogo],
+  const opcoesDeEstado = useMemo(
+    () => (estados.data ?? []).map((item) => ({ value: item.uf, label: item.nome })),
+    [estados.data],
   );
-  const cidades = useMemo(
-    () => catalogo.filter((destino) => destino.pais === pais),
-    [catalogo, pais],
+  const opcoesDeCidade = useMemo(
+    () => (cidades.data ?? []).map((item) => ({ value: item.nome, label: item.nome })),
+    [cidades.data],
   );
 
-  function escolher(destino: Destino) {
-    setPais(destino.pais);
-    setSlug(destino.slug);
+  function escolher(destino: DestinoDesejado) {
+    setUf(destino.uf);
+    setCidade(destino.cidade);
   }
 
   function confirmar() {
-    const destino = catalogo.find((item) => item.slug === slug);
-    if (!destino) return;
+    if (!uf || !cidade) return;
 
-    onAdicionar(destino);
+    onAdicionar({ uf, cidade });
     onOpenChange(false);
   }
+
+  const selecionada = (destino: DestinoDesejado) =>
+    destino.uf === uf && destino.cidade === cidade;
 
   return (
     <div className="flex flex-col gap-block">
       <div className="grid gap-inline sm:grid-cols-2">
-        <Select
-          aria-label="País"
-          placeholder="País"
-          value={pais}
-          options={paises.map((nome) => ({ value: nome, label: nome }))}
-          onChange={(evento) => {
-            setPais(evento.target.value);
-            setSlug("");
+        <SearchableSelect
+          label="Estado"
+          placeholder={estados.isPending ? "Carregando…" : "Estado"}
+          searchPlaceholder="Pesquisar estado"
+          value={uf}
+          options={opcoesDeEstado}
+          onChange={(valor) => {
+            setUf(valor);
+            setCidade("");
           }}
         />
-        <Select
-          aria-label="Cidade"
-          placeholder="Cidade"
-          value={slug}
-          disabled={!pais}
-          options={cidades.map((destino) => ({
-            value: destino.slug,
-            label: destino.cidade,
-          }))}
-          onChange={(evento) => setSlug(evento.target.value)}
+        <SearchableSelect
+          label="Cidade"
+          placeholder={uf && cidades.isPending ? "Carregando…" : "Cidade"}
+          searchPlaceholder="Pesquisar cidade"
+          value={cidade}
+          disabled={!uf}
+          options={opcoesDeCidade}
+          onChange={setCidade}
         />
       </div>
 
@@ -117,22 +119,22 @@ function Formulario({
                 <button
                   type="button"
                   onClick={() => escolher(destino)}
-                  aria-pressed={destino.slug === slug}
+                  aria-pressed={selecionada(destino)}
                   className={`flex w-full cursor-pointer items-center gap-3 rounded-lg border bg-paper p-2.5 text-left transition-colors hover:border-brand-300 ${
-                    destino.slug === slug
+                    selecionada(destino)
                       ? "border-brand-500"
                       : "border-surface-600"
                   }`}
                 >
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-surface-500 font-sans text-[11px] font-semibold text-text-muted-500">
-                    {destino.codigoPais}
+                    {destino.uf}
                   </span>
                   <span className="flex min-w-0 flex-col">
                     <span className="truncate font-sans text-sm font-semibold text-ink">
                       {destino.cidade}
                     </span>
                     <span className="truncate font-sans text-xs text-text-muted-400">
-                      {destino.pais}, {destino.continente}
+                      {destino.estado}, {destino.regiao}
                     </span>
                   </span>
                 </button>
@@ -156,7 +158,7 @@ function Formulario({
         >
           Cancelar
         </Button>
-        <Button fullWidth={false} disabled={!slug} onClick={confirmar}>
+        <Button fullWidth={false} disabled={!uf || !cidade} onClick={confirmar}>
           Adicionar
         </Button>
       </div>

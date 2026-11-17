@@ -5,6 +5,7 @@ import { gerarHashDeSenha } from "@/server/auth/senha";
 import { prisma } from "@/server/db/prisma";
 import {
   replaceInterests,
+  resolveDesiredDestinations,
   syncTrips,
   toDbDate,
   toDbPerfilViagem,
@@ -14,7 +15,7 @@ const TIMEOUT_TRANSACAO_MS = 15_000;
 
 /**
  * Cria usuário, preferências, interesses e viagens de uma vez. Se qualquer
- * parte falhar (e-mail repetido, país inválido…), nada fica gravado — não
+ * parte falhar (e-mail repetido, cidade inválida…), nada fica gravado — não
  * sobra "meio usuário" no banco.
  *
  * @returns id do usuário criado.
@@ -26,7 +27,11 @@ export async function registerUser({
 }: RegisterPayload): Promise<string> {
   // Hash fora da transação: o scrypt é lento de propósito, e transação boa é
   // transação curta.
-  const senhaHash = await gerarHashDeSenha(conta.senha);
+  // Rede (IBGE) também fica fora: a cidade é conferida antes de abrir a transação.
+  const [senhaHash, destinos] = await Promise.all([
+    gerarHashDeSenha(conta.senha),
+    resolveDesiredDestinations(preferencias.destinos),
+  ]);
 
   return prisma.$transaction(
     async (tx) => {
@@ -48,7 +53,7 @@ export async function registerUser({
       });
 
       await replaceInterests(tx, id, preferencias.interesses);
-      await syncTrips(tx, id, preferencias.destinos);
+      await syncTrips(tx, id, destinos);
 
       return id;
     },

@@ -1,12 +1,10 @@
-import { CalendarDays, Coins, Info, MapPin, Thermometer } from "lucide-react";
+import { CalendarDays, Info, Map as MapIcon, MapPin, Thermometer } from "lucide-react";
 import type { ReactNode } from "react";
 import { Badge, Card, Eyebrow } from "@/shared/components/ui";
 import { NIVEL_CUSTO } from "../constants/rotulos";
 import type { Destino } from "../types/destino";
 import type { ClimaDoDia, LiveConditions } from "../types/live-conditions";
 import {
-  descreverCotacao,
-  descreverCotacaoAoVivo,
   diasAte,
   faixaDeClima,
   formatarBRL,
@@ -83,18 +81,12 @@ export function DestinoStats({
   /** Dados ao vivo; enquanto não chegam (ou se falharem), vale o catálogo. */
   condicoes?: LiveConditions;
 }) {
-  const { clima, melhorEpoca, moeda } = destino;
+  const { clima, melhorEpoca } = destino;
   const nivel = NIVEL_CUSTO[nivelDeCusto(destino.custoDiarioBRL)].label;
 
   const previsaoDaViagem =
     condicoes?.clima?.dias.find((dia) => dia.data === dataPrevista) ?? null;
   const agora = condicoes?.clima?.atual;
-  const cambio = condicoes?.cambio;
-
-  // "Hoje" = cotação ao vivo; "Referência" = valor do catálogo; BRL não precisa de selo.
-  let seloDaMoeda: string | undefined;
-  if (cambio) seloDaMoeda = "Hoje";
-  else if (moeda.codigo !== "BRL") seloDaMoeda = "Referência";
 
   return (
     <div className="flex flex-col gap-stack">
@@ -126,11 +118,10 @@ export function DestinoStats({
           detail={periodoDosMeses(melhorEpoca.meses)}
         />
         <StatCard
-          icon={<Coins className={ICONE} strokeWidth={1.5} aria-hidden />}
-          label="Moeda"
-          value={moeda.codigo}
-          detail={cambio ? descreverCotacaoAoVivo(cambio) : descreverCotacao(moeda)}
-          badge={seloDaMoeda}
+          icon={<MapIcon className={ICONE} strokeWidth={1.5} aria-hidden />}
+          label="Região"
+          value={destino.regiao}
+          detail={destino.estado}
         />
         <StatCard
           icon={<MapPin className={ICONE} strokeWidth={1.5} aria-hidden />}

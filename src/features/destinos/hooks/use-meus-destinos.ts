@@ -1,6 +1,7 @@
 "use client";
 
 import { MAX_DESTINATIONS } from "@/features/auth/constants/destinations";
+import type { DestinoDesejado } from "@/features/auth/types/auth";
 import { useDestinosRanking } from "../api/use-destinos";
 import {
   useCreateTripMutation,
@@ -8,7 +9,6 @@ import {
   useTrips,
   useUpdateTripMutation,
 } from "../api/use-trips";
-import type { Destino } from "../types/destino";
 import type { Trip, TripStatus } from "../types/trip";
 import { encontrarDestino, mesmoDestino } from "../utils/catalogo";
 
@@ -61,10 +61,10 @@ export function useMeusDestinos() {
     cheio,
     /** Recusa do servidor na última ação (limite, destino repetido…). */
     erro: (criar.error ?? atualizar.error ?? excluir.error)?.message,
-    adicionar: (destino: Destino) => {
+    adicionar: ({ uf, cidade }: DestinoDesejado) => {
       if (cheio) return;
       limparErros();
-      criar.mutate({ pais: destino.pais, cidade: destino.cidade });
+      criar.mutate({ uf, cidade });
     },
     mudarStatus: (viagem: Trip, status: TripStatus) => {
       limparErros();
