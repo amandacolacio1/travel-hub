@@ -7,9 +7,27 @@ import { createTrip, deleteTrip, fetchTrips, updateTrip } from "./trips.service"
 
 export const TRIPS_QUERY_KEY = ["viagens"] as const;
 
-/** "Meus destinos" do usuário logado (`GET /api/viagens`). */
+/** Enquanto alguma ficha está sendo preparada, consulta de novo neste ritmo. */
+const INTERVALO_ENQUANTO_PREPARA_MS = 2_000;
+
+function preparandoFicha(viagens: Trip[] | undefined): boolean {
+  return (viagens ?? []).some(({ destino }) =>
+    ["pendente", "gerando"].includes(destino.fichaStatus),
+  );
+}
+
+/**
+ * "Meus destinos" do usuário logado (`GET /api/viagens`). Fichas novas são
+ * geradas no servidor depois da resposta; até ficarem prontas, a lista se
+ * atualiza sozinha.
+ */
 export function useTrips() {
-  return useQuery({ queryKey: TRIPS_QUERY_KEY, queryFn: fetchTrips });
+  return useQuery({
+    queryKey: TRIPS_QUERY_KEY,
+    queryFn: fetchTrips,
+    refetchInterval: (query) =>
+      preparandoFicha(query.state.data) ? INTERVALO_ENQUANTO_PREPARA_MS : false,
+  });
 }
 
 /**

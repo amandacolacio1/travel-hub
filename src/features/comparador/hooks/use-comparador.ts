@@ -2,7 +2,11 @@
 
 import { useMemo } from "react";
 import { MAX_DESTINATIONS } from "@/features/auth/constants/destinations";
-import { useDestinosRanking } from "@/features/destinos/api/use-destinos";
+import type { DestinoDesejado } from "@/features/auth/types/auth";
+import {
+  useDestinosRanking,
+  useEnsureDestinationMutation,
+} from "@/features/destinos/api/use-destinos";
 import { useComparadorStore } from "../store/use-comparador-store";
 
 export const MAX_COMPARADOR = MAX_DESTINATIONS;
@@ -13,6 +17,7 @@ export function useComparador() {
   const dados = useDestinosRanking();
   const slugsEscolhidos = useComparadorStore((state) => state.slugs);
   const setSlugs = useComparadorStore((state) => state.setSlugs);
+  const preparar = useEnsureDestinationMutation();
 
   const slugs = useMemo(
     () =>
@@ -42,6 +47,15 @@ export function useComparador() {
     [dados.ranking, slugs],
   );
 
+  function adicionar(slug: string) {
+    // Lê a escolha mais recente: com a ficha sendo preparada, a lista pode ter
+    // mudado desde o clique.
+    const atuais = useComparadorStore.getState().slugs ?? slugs;
+    if (atuais.length < MAX_COMPARADOR && !atuais.includes(slug)) {
+      setSlugs([...atuais, slug]);
+    }
+  }
+
   return {
     session: dados.session,
     isPending: dados.isPending,
@@ -50,11 +64,16 @@ export function useComparador() {
     disponiveis,
     sugestoes,
     cheio: slugs.length >= MAX_COMPARADOR,
-    adicionar: (slug: string) => {
-      if (slugs.length < MAX_COMPARADOR && !slugs.includes(slug)) {
-        setSlugs([...slugs, slug]);
-      }
-    },
+    adicionar,
+    /**
+     * Cidade escolhida no modal (qualquer uma do IBGE): prepara a ficha, se
+     * ainda não existir, e só então entra na comparação.
+     */
+    adicionarCidade: (cidade: DestinoDesejado) =>
+      preparar.mutate(cidade, { onSuccess: (destino) => adicionar(destino.slug) }),
+    /** Cidade cuja ficha está sendo preparada para entrar na comparação. */
+    preparando: preparar.isPending ? preparar.variables : undefined,
+    erro: preparar.error?.message,
     remover: (slug: string) => setSlugs(slugs.filter((item) => item !== slug)),
   };
 }

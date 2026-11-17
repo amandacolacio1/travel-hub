@@ -10,12 +10,16 @@ export function normalizar(texto: string): string {
     .toLowerCase();
 }
 
-/** `("São Paulo", "SP")` → `"sao-paulo-sp"`. A UF evita colisão entre homônimas. */
-export function slugDoDestino(cidade: string, uf: string): string {
-  const base = normalizar(cidade)
+/** `"Pão de Açúcar!"` → `"pao-de-acucar"`. */
+export function slugificar(texto: string): string {
+  return normalizar(texto)
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
-  return `${base}-${uf.toLowerCase()}`;
+}
+
+/** `("São Paulo", "SP")` → `"sao-paulo-sp"`. A UF evita colisão entre homônimas. */
+export function slugDoDestino(cidade: string, uf: string): string {
+  return `${slugificar(cidade)}-${uf.toLowerCase()}`;
 }
 
 export function mesmoDestino(a: DestinoDesejado, b: DestinoDesejado): boolean {

@@ -1,5 +1,5 @@
-import { Star, Trash2 } from "lucide-react";
-import { Badge, ButtonLink, Card, CoverImage, Select } from "@/shared/components/ui";
+import { LoaderCircle, Star, Trash2 } from "lucide-react";
+import { Badge, Button, ButtonLink, Card, CoverImage, Select } from "@/shared/components/ui";
 import { STATUS_VIAGEM } from "../constants/rotulos";
 import type { Destino } from "../types/destino";
 import type { Trip, TripStatus } from "../types/trip";
@@ -7,21 +7,28 @@ import { formatarNota } from "../utils/formatadores";
 
 type DestinoSalvoCardProps = {
   viagem: Trip;
-  /** Indefinido quando a cidade escolhida ainda não existe no catálogo. */
+  /** Indefinido enquanto a ficha da cidade não fica pronta. */
   destino?: Destino;
+  /** Nova tentativa em andamento (botão "Tentar de novo"). */
+  tentando?: boolean;
   onMudarStatus: (status: TripStatus) => void;
+  onTentarDeNovo: () => void;
   onRemover: () => void;
 };
+
 
 const OPCOES_STATUS = STATUS_VIAGEM.map(({ id, label }) => ({ value: id, label }));
 
 export function DestinoSalvoCard({
   viagem,
   destino,
+  tentando = false,
   onMudarStatus,
+  onTentarDeNovo,
   onRemover,
 }: DestinoSalvoCardProps) {
   const { estado, cidade } = viagem.destino;
+  const falhou = !destino && !tentando && viagem.destino.fichaStatus === "erro";
 
   return (
     <Card padding="none" className="flex w-full flex-col overflow-hidden">
@@ -47,10 +54,13 @@ export function DestinoSalvoCard({
       <div className="flex flex-1 flex-col gap-stack p-card">
         <div className="flex flex-col gap-1">
           <h3 className="font-serif text-xl text-ink">{cidade}</h3>
-          <p className="font-sans text-xs text-text-muted-400">
+          <p className="flex items-center gap-1.5 font-sans text-xs text-text-muted-400">
+            {!destino && !falhou ? (
+              <LoaderCircle className="h-3 w-3 animate-spin" strokeWidth={1.5} aria-hidden />
+            ) : null}
             {destino
               ? `${estado} • ${destino.tema}`
-              : `${estado} • Ainda sem detalhes no catálogo`}
+              : `${estado} • ${falhou ? "Não foi possível preparar a ficha" : "Preparando a ficha deste destino…"}`}
           </p>
         </div>
 
@@ -74,6 +84,10 @@ export function DestinoSalvoCard({
             >
               Ver detalhes
             </ButtonLink>
+          ) : falhou ? (
+            <Button variant="soft" size="sm" fullWidth={false} className="flex-1" onClick={onTentarDeNovo}>
+              Tentar de novo
+            </Button>
           ) : (
             <span className="flex-1" />
           )}

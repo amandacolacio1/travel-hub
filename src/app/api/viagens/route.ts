@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { createTripSchema } from "@/features/destinos/schemas/trip.schema";
 import { lerUsuarioIdDaSessao } from "@/server/auth/sessao";
+import { ensureProfile } from "@/server/destinations/destination-catalog";
 import { NO_STORE, errorResponse, jsonError } from "@/server/http/http-error";
 import { createTrip, listTrips } from "@/server/trips/trip-service";
 
@@ -14,7 +15,11 @@ export async function GET() {
   return NextResponse.json(await listTrips(usuarioId), { headers: NO_STORE });
 }
 
-/** `POST /api/viagens` — salva um destino `{ pais, cidade, dataPrevista? }`. */
+/**
+ * `POST /api/viagens` — salva um destino `{ uf, cidade, dataPrevista? }`. Se a
+ * cidade ainda não tem ficha, ela é gerada depois da resposta: a tela mostra
+ * "preparando" e consulta de novo até ficar pronta.
+ */
 export async function POST(request: Request) {
   const usuarioId = await lerUsuarioIdDaSessao();
   if (!usuarioId) return jsonError("Sessão não encontrada", 401);
@@ -27,6 +32,9 @@ export async function POST(request: Request) {
 
   try {
     const viagem = await createTrip(usuarioId, validacao.data);
+    if (viagem.destino.fichaStatus !== "pronta") {
+      after(() => ensureProfile(viagem.destino.slug));
+    }
     return NextResponse.json(viagem, { status: 201, headers: NO_STORE });
   } catch (falha) {
     return errorResponse(falha, DESTINO_REPETIDO);

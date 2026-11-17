@@ -21,6 +21,13 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.join(__dirname),
   },
+  images: {
+    // Fotos de capa das cidades vêm da Wikipedia (Wikimedia Commons).
+    remotePatterns: [
+      { protocol: "https", hostname: "upload.wikimedia.org" },
+      { protocol: "https", hostname: "thumb.wikimedia.org" },
+    ],
+  },
   async headers() {
     return [
       {

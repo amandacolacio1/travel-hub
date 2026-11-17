@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { registerSchema } from "@/features/auth/schemas/register.schema";
 import {
   identificarOrigem,
   registrarTentativa,
 } from "@/server/auth/limite-de-tentativas";
 import { criarSessao } from "@/server/auth/sessao";
+import { ensureProfilesForUser } from "@/server/destinations/destination-catalog";
 import { HttpError, isUniqueViolation } from "@/server/http/http-error";
 import { registerUser } from "@/server/users/register-user";
 
@@ -40,6 +41,8 @@ export async function POST(request: Request) {
 
   try {
     const usuarioId = await registerUser(validacao.data);
+    // Fichas das cidades escolhidas no cadastro: geradas depois da resposta.
+    after(() => ensureProfilesForUser(usuarioId));
     const sessao = await criarSessao(usuarioId);
     return NextResponse.json(sessao, { status: 201, headers: SEM_CACHE });
   } catch (falha) {

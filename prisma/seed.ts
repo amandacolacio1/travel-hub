@@ -6,6 +6,10 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { INTERESTS } from "../src/features/auth/constants/interests";
+import { rioDeJaneiro } from "./seed-data/rio-de-janeiro";
+
+/** Código do município do Rio de Janeiro no IBGE. */
+const RIO_DE_JANEIRO_IBGE = 3304557;
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }),
@@ -58,9 +62,35 @@ async function semearUsuarioDemo() {
   console.log(`✔ usuário demo ${usuario.email}`);
 }
 
+/**
+ * Ficha editorial (escrita à mão) do Rio de Janeiro, já pronta. As fichas das
+ * outras cidades vêm do gerador: `npm run ai:profiles`.
+ */
+async function semearRioDeJaneiro() {
+  const { slug, cidade, uf, estado, regiao, ...ficha } = rioDeJaneiro;
+  const dados = {
+    cidade,
+    uf,
+    estado,
+    regiao,
+    ficha,
+    fichaStatus: "PRONTA" as const,
+    fichaFonte: "editorial",
+    fichaAtualizadaEm: new Date(),
+  };
+
+  await prisma.destino.upsert({
+    where: { slug },
+    update: dados,
+    create: { ...dados, slug, ibgeId: RIO_DE_JANEIRO_IBGE },
+  });
+  console.log(`✔ ficha editorial ${cidade}`);
+}
+
 async function main() {
   await semearInteresses();
   await semearUsuarioDemo();
+  await semearRioDeJaneiro();
 }
 
 main()

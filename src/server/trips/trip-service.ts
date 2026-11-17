@@ -6,7 +6,7 @@ import type {
   CreateTripPayload,
   UpdateTripPayload,
 } from "@/features/destinos/schemas/trip.schema";
-import type { Trip, TripStatus } from "@/features/destinos/types/trip";
+import type { ProfileStatus, Trip, TripStatus } from "@/features/destinos/types/trip";
 import { prisma } from "@/server/db/prisma";
 import { resolveDestinationOrThrow } from "@/server/destinations/resolve-destination";
 import { upsertDestination } from "@/server/destinations/upsert-destination";
@@ -17,7 +17,12 @@ type Tx = Prisma.TransactionClient;
 
 const TIMEOUT_TRANSACAO_MS = 15_000;
 
-const TRIP_INCLUDE = { destino: true } satisfies Prisma.ViagemInclude;
+/** Sem a coluna `ficha` (JSON grande): a lista só precisa saber se está pronta. */
+const TRIP_INCLUDE = {
+  destino: {
+    select: { slug: true, uf: true, estado: true, cidade: true, fichaStatus: true },
+  },
+} satisfies Prisma.ViagemInclude;
 
 type ViagemComDestino = Prisma.ViagemGetPayload<{ include: typeof TRIP_INCLUDE }>;
 
@@ -38,6 +43,7 @@ function toPublicTrip(viagem: ViagemComDestino): Trip {
       uf: viagem.destino.uf,
       estado: viagem.destino.estado,
       cidade: viagem.destino.cidade,
+      fichaStatus: viagem.destino.fichaStatus.toLowerCase() as ProfileStatus,
     },
   };
 }

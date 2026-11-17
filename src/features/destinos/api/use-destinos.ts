@@ -1,10 +1,11 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useSession } from "@/shared/session";
 import { rankearDestinos } from "../utils/score";
-import { fetchDestinos } from "./destinos.service";
+import { ensureDestination, fetchDestinos } from "./destinos.service";
+import { TRIPS_QUERY_KEY } from "./use-trips";
 
 export const DESTINOS_QUERY_KEY = ["destinos"] as const;
 
@@ -16,6 +17,23 @@ export function useDestinos() {
     queryKey: DESTINOS_QUERY_KEY,
     queryFn: fetchDestinos,
     staleTime: CINCO_MINUTOS,
+  });
+}
+
+/**
+ * Prepara a ficha de uma cidade e atualiza o catálogo e as viagens (o status
+ * da ficha aparece em "Meus destinos").
+ */
+export function useEnsureDestinationMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ensureDestination,
+    onSettled: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: DESTINOS_QUERY_KEY }),
+        queryClient.invalidateQueries({ queryKey: TRIPS_QUERY_KEY }),
+      ]),
   });
 }
 

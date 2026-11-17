@@ -4,9 +4,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import type { Destino, Experiencia } from "@/features/destinos/types/destino";
 import type { SavedTour } from "@/features/explorar/types/saved-tour";
 import { prisma } from "@/server/db/prisma";
-import { resolveDestinationOrThrow } from "@/server/destinations/resolve-destination";
-import { upsertDestination } from "@/server/destinations/upsert-destination";
-import { listarDestinos } from "@/server/destinos/catalogo";
+import { listCatalog } from "@/server/destinations/destination-catalog";
 import { HttpError } from "@/server/http/http-error";
 
 const SAVED_TOUR_INCLUDE = {
@@ -35,14 +33,14 @@ function toPublicSavedTour({ passeio, criadoEm }: SalvoCompleto): SavedTour {
 }
 
 /**
- * A "API de passeios" ainda não foi definida; até lá, a fonte é o catálogo
- * editorial e o `apiId` é o id da experiência. Quando a API entrar, só esta
+ * A "API de passeios" ainda não foi definida; até lá, a fonte são as fichas
+ * do catálogo e o `apiId` é o id da experiência. Quando a API entrar, só esta
  * função muda (passa a buscar na API pelo id).
  */
-function buscarNaFonte(
+async function buscarNaFonte(
   apiId: string,
-): { experiencia: Experiencia; destino: Destino } | null {
-  for (const destino of listarDestinos()) {
+): Promise<{ experiencia: Experiencia; destino: Destino } | null> {
+  for (const destino of await listCatalog()) {
     const experiencia = destino.experiencias.find((item) => item.id === apiId);
     if (experiencia) return { experiencia, destino };
   }
@@ -59,20 +57,23 @@ export async function listSavedTours(usuarioId: string): Promise<SavedTour[]> {
 }
 
 /**
- * "Salvar um passeio" do PDF: upsert em `destinos` e `passeios` (cópias
- * compartilhadas) + linha em `passeios_salvos`. Idempotente: salvar duas
+ * "Salvar um passeio" do PDF: upsert em `passeios` (cópia compartilhada) +
+ * linha em `passeios_salvos`. Idempotente: salvar duas
  * vezes não dá erro, porque o ♡ pode ser clicado rápido demais.
  *
  * Título, preço etc. vêm da fonte, nunca do corpo da requisição — senão
  * qualquer pessoa gravaria o preço que quisesse.
  */
 export async function saveTour(usuarioId: string, apiId: string): Promise<SavedTour> {
-  const fonte = buscarNaFonte(apiId);
+  const fonte = await buscarNaFonte(apiId);
   if (!fonte) throw new HttpError(404, "Passeio não encontrado");
 
   const { experiencia, destino } = fonte;
-  // Rede (IBGE) antes da transação, como em viagens.
-  const destinoResolvido = await resolveDestinationOrThrow(destino.uf, destino.cidade);
+  // Destino do catálogo já tem linha em `destinos` (é lá que a ficha mora).
+  const { id: destinoId } = await prisma.destino.findUniqueOrThrow({
+    where: { slug: destino.slug },
+    select: { id: true },
+  });
   const dadosDoPasseio = {
     titulo: experiencia.titulo,
     descricao: experiencia.descricao,
@@ -82,8 +83,6 @@ export async function saveTour(usuarioId: string, apiId: string): Promise<SavedT
   };
 
   await prisma.$transaction(async (tx) => {
-    const destinoId = await upsertDestination(tx, destinoResolvido);
-
     // A cópia é atualizada a cada novo salvamento: fica tão fresca quanto a fonte.
     const { id: passeioId } = await tx.passeio.upsert({
       where: { apiId },

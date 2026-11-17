@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { lerUsuarioIdDaSessao } from "@/server/auth/sessao";
+import { findCatalogDestination } from "@/server/destinations/destination-catalog";
 import { getLiveConditions } from "@/server/destinations/live-conditions";
-import { listarDestinos } from "@/server/destinos/catalogo";
 import { NO_STORE, jsonError } from "@/server/http/http-error";
 
 type Contexto = { params: Promise<{ slug: string }> };
@@ -16,7 +16,7 @@ export async function GET(_request: Request, contexto: Contexto) {
   if (!usuarioId) return jsonError("Sessão não encontrada", 401);
 
   const { slug } = await contexto.params;
-  const destino = listarDestinos().find((item) => item.slug === slug);
+  const destino = await findCatalogDestination(slug);
   if (!destino) return jsonError("Destino não encontrado", 404);
 
   const condicoes = await getLiveConditions(destino);

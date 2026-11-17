@@ -27,6 +27,15 @@ enum StatusViagem {
   REALIZADA
 }
 
+/// Ciclo da ficha do destino: PENDENTE → GERANDO → PRONTA (ou ERRO, que pode
+/// ser tentado de novo).
+enum StatusFicha {
+  PENDENTE
+  GERANDO
+  PRONTA
+  ERRO
+}
+
 // ─── Conta ──────────────────────────────────────────────────────────────
 
 /// Conta e dados pessoais. Cadastro · Etapa 1 e Editar perfil.
@@ -106,10 +115,20 @@ model Destino {
   latitude  Decimal? @db.Decimal(9, 6)
   longitude Decimal? @db.Decimal(9, 6)
 
+  /// Ficha do destino (clima, custo, afinidades, experiências…), no formato do
+  /// tipo `DestinationProfile`. Gerada uma vez por cidade, não por usuário.
+  ficha             Json?
+  fichaStatus       StatusFicha @default(PENDENTE) @map("ficha_status")
+  /// Quem escreveu a ficha: "editorial", "fake", "ollama"…
+  fichaFonte        String?     @map("ficha_fonte")
+  /// Última mudança de status. Um GERANDO antigo demais é dado como travado.
+  fichaAtualizadaEm DateTime?   @map("ficha_atualizada_em")
+
   viagens  Viagem[]
   passeios Passeio[]
 
   @@index([uf])
+  @@index([fichaStatus])
   @@map("destinos")
 }
 

@@ -68,7 +68,12 @@ export function MeusDestinosView() {
             <DestinoSalvoCard
               viagem={viagem}
               destino={destino}
+              tentando={
+                meus.preparando?.uf === viagem.destino.uf &&
+                meus.preparando.cidade === viagem.destino.cidade
+              }
               onMudarStatus={(status) => meus.mudarStatus(viagem, status)}
+              onTentarDeNovo={() => meus.tentarDeNovo(viagem)}
               onRemover={() => meus.remover(viagem)}
             />
           </li>

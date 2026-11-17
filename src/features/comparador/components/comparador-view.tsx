@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Page, PageHeader, StateMessage } from "@/shared/components/ui";
 import { AdicionarDestinoModal } from "@/features/destinos/components/adicionar-destino-modal";
-import { slugDoDestino } from "@/features/destinos/utils/catalogo";
 import { MAX_COMPARADOR, useComparador } from "../hooks/use-comparador";
 import { montarResumo } from "../utils/resumo";
 import { AdicionarDestino } from "./adicionar-destino";
@@ -46,6 +45,21 @@ export function ComparadorView() {
         onRemover={comparador.remover}
       />
 
+      {comparador.preparando ? (
+        <p role="status" className="font-sans text-xs text-text-muted-400">
+          Preparando {comparador.preparando.cidade} para a comparação…
+        </p>
+      ) : null}
+
+      {comparador.erro ? (
+        <p
+          role="alert"
+          className="rounded-lg bg-error-50 px-3.5 py-2.5 font-sans text-xs text-error-500"
+        >
+          {comparador.erro}
+        </p>
+      ) : null}
+
       {selecionados.length === 0 ? (
         <StateMessage
           variant="empty"
@@ -70,9 +84,7 @@ export function ComparadorView() {
           vagas: MAX_COMPARADOR - selecionados.length,
           max: MAX_COMPARADOR,
         }}
-        onAdicionar={(destino) =>
-          comparador.adicionar(slugDoDestino(destino.cidade, destino.uf))
-        }
+        onAdicionar={comparador.adicionarCidade}
       />
     </Page>
   );

@@ -1,8 +1,14 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { MAX_DESTINATIONS } from "@/features/auth/constants/destinations";
 import type { DestinoDesejado } from "@/features/auth/types/auth";
-import { useDestinosRanking } from "../api/use-destinos";
+import {
+  DESTINOS_QUERY_KEY,
+  useDestinosRanking,
+  useEnsureDestinationMutation,
+} from "../api/use-destinos";
 import {
   useCreateTripMutation,
   useDeleteTripMutation,
@@ -16,16 +22,18 @@ import { encontrarDestino, mesmoDestino } from "../utils/catalogo";
 export const MAX_DESTINOS_SALVOS = MAX_DESTINATIONS;
 
 /**
- * Viagens do usuário (`/api/viagens`) cruzadas com o catálogo. Destinos
- * salvos que não existem no catálogo continuam na lista, só que sem detalhes
- * (`destino` indefinido).
+ * Viagens do usuário (`/api/viagens`) cruzadas com o catálogo. Enquanto a
+ * ficha de uma cidade é preparada, ela continua na lista sem detalhes
+ * (`destino` indefinido) e o card mostra o andamento.
  */
 export function useMeusDestinos() {
+  const queryClient = useQueryClient();
   const dados = useDestinosRanking();
   const viagens = useTrips();
   const criar = useCreateTripMutation();
   const atualizar = useUpdateTripMutation();
   const excluir = useDeleteTripMutation();
+  const preparar = useEnsureDestinationMutation();
 
   const lista = viagens.data ?? [];
   const catalogo = dados.destinos ?? [];
@@ -34,6 +42,16 @@ export function useMeusDestinos() {
     viagem,
     destino: encontrarDestino(catalogo, viagem.destino),
   }));
+
+  // Ficha ficou pronta no servidor, mas o catálogo em cache é de antes: recarrega.
+  const catalogoDesatualizado = itens.some(
+    ({ viagem, destino }) => viagem.destino.fichaStatus === "pronta" && !destino,
+  );
+  useEffect(() => {
+    if (catalogoDesatualizado) {
+      queryClient.invalidateQueries({ queryKey: DESTINOS_QUERY_KEY });
+    }
+  }, [catalogoDesatualizado, queryClient]);
 
   const naoSalvos = dados.ranking.filter(
     ({ destino }) => !lista.some((viagem) => mesmoDestino(viagem.destino, destino)),
@@ -47,6 +65,7 @@ export function useMeusDestinos() {
     criar.reset();
     atualizar.reset();
     excluir.reset();
+    preparar.reset();
   }
 
   return {
@@ -60,7 +79,9 @@ export function useMeusDestinos() {
     vagas: Math.max(0, MAX_DESTINOS_SALVOS - planejando),
     cheio,
     /** Recusa do servidor na última ação (limite, destino repetido…). */
-    erro: (criar.error ?? atualizar.error ?? excluir.error)?.message,
+    erro: (criar.error ?? atualizar.error ?? excluir.error ?? preparar.error)?.message,
+    /** Viagem cuja ficha está sendo preparada a pedido do usuário ("Tentar de novo"). */
+    preparando: preparar.isPending ? preparar.variables : undefined,
     adicionar: ({ uf, cidade }: DestinoDesejado) => {
       if (cheio) return;
       limparErros();
@@ -69,6 +90,11 @@ export function useMeusDestinos() {
     mudarStatus: (viagem: Trip, status: TripStatus) => {
       limparErros();
       atualizar.mutate({ id: viagem.id, patch: { status } });
+    },
+    /** Nova tentativa de gerar a ficha, depois de um erro. */
+    tentarDeNovo: (viagem: Trip) => {
+      limparErros();
+      preparar.mutate({ uf: viagem.destino.uf, cidade: viagem.destino.cidade });
     },
     remover: (viagem: Trip) => {
       limparErros();

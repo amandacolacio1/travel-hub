@@ -1,4 +1,4 @@
-import type { Destino } from "@/features/destinos/types/destino";
+import type { Destino } from "../../src/features/destinos/types/destino";
 
 export const rioDeJaneiro: Destino = {
   slug: "rio-de-janeiro-rj",
