@@ -7,7 +7,6 @@ import type { Session } from "@/shared/session/session.types";
 /** Tudo o que a sessão precisa, num único `include`. */
 export const SESSION_INCLUDE = {
   preferencias: true,
-  interesses: { include: { interesse: true } },
 } satisfies Prisma.UsuarioInclude;
 
 export type UsuarioComSessao = Prisma.UsuarioGetPayload<{
@@ -30,7 +29,7 @@ export function toPublicSession(usuario: UsuarioComSessao): Session {
       cidade: usuario.cidade,
     },
     preferencias: {
-      interesses: usuario.interesses.map(({ interesse }) => interesse.slug),
+      interesses: preferencias?.interesses ?? [],
       orcamentoInicial: Number(preferencias?.orcamentoMin ?? 0),
       orcamentoFinal: Number(preferencias?.orcamentoMax ?? 0),
       // `@db.Date` volta como meia-noite UTC: os 10 primeiros caracteres são a data.

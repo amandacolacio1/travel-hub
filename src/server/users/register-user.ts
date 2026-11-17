@@ -4,7 +4,7 @@ import type { RegisterPayload } from "@/features/auth/schemas/register.schema";
 import { gerarHashDeSenha } from "@/server/auth/senha";
 import { prisma } from "@/server/db/prisma";
 import {
-  replaceInterests,
+  knownInterests,
   resolveDesiredDestinations,
   syncTrips,
   toDbDate,
@@ -28,9 +28,10 @@ export async function registerUser({
   // Hash fora da transação: o scrypt é lento de propósito, e transação boa é
   // transação curta.
   // Rede (IBGE) também fica fora: a cidade é conferida antes de abrir a transação.
-  const [senhaHash, destinos] = await Promise.all([
+  const [senhaHash, destinos, interesses] = await Promise.all([
     gerarHashDeSenha(conta.senha),
     resolveDesiredDestinations(preferencias.destinos),
+    knownInterests(preferencias.interesses),
   ]);
 
   return prisma.$transaction(
@@ -46,13 +47,13 @@ export async function registerUser({
               orcamentoMin: preferencias.orcamentoInicial,
               orcamentoMax: preferencias.orcamentoFinal,
               dataPrevista: toDbDate(preferencias.dataPrevista),
+              interesses,
             },
           },
         },
         select: { id: true },
       });
 
-      await replaceInterests(tx, id, preferencias.interesses);
       await syncTrips(tx, id, destinos);
 
       return id;

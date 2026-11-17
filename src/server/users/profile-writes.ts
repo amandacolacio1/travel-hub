@@ -8,6 +8,7 @@ import {
   resolveDestinationOrThrow,
 } from "@/server/destinations/resolve-destination";
 import { upsertDestination } from "@/server/destinations/upsert-destination";
+import { prisma } from "@/server/db/prisma";
 import { HttpError } from "@/server/http/http-error";
 
 type Tx = Prisma.TransactionClient;
@@ -27,17 +28,21 @@ export function toDbDate(data: string): Date | null {
   return data ? new Date(`${data}T00:00:00.000Z`) : null;
 }
 
-/** Substitui os interesses do usuário. Slugs desconhecidos são ignorados. */
-export async function replaceInterests(tx: Tx, usuarioId: string, slugs: string[]) {
-  const interesses = await tx.interesse.findMany({
-    where: { slug: { in: slugs } },
-    select: { id: true },
-  });
+/**
+ * Mantém só os slugs que existem na tabela `interesses`, sem repetição e na
+ * ordem em que vieram. O array em `preferencias` não tem chave estrangeira,
+ * então a validação é aqui.
+ */
+export async function knownInterests(slugs: string[]): Promise<string[]> {
+  const unicos = [...new Set(slugs)];
+  if (unicos.length === 0) return [];
 
-  await tx.usuarioInteresse.deleteMany({ where: { usuarioId } });
-  await tx.usuarioInteresse.createMany({
-    data: interesses.map(({ id }) => ({ usuarioId, interesseId: id })),
+  const existentes = await prisma.interesse.findMany({
+    where: { slug: { in: unicos } },
+    select: { slug: true },
   });
+  const validos = new Set(existentes.map(({ slug }) => slug));
+  return unicos.filter((slug) => validos.has(slug));
 }
 
 /**

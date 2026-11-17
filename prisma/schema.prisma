@@ -44,7 +44,6 @@ model Usuario {
   criadoEm  DateTime @default(now()) @map("criado_em")
 
   preferencias   Preferencias?
-  interesses     UsuarioInteresse[]
   viagens        Viagem[]
   passeiosSalvos PasseioSalvo[]
   sessoes        Sessao[]
@@ -65,6 +64,11 @@ model Preferencias {
   orcamentoMax Decimal      @map("orcamento_max") @db.Decimal(12, 2)
   moeda        String       @default("BRL") @db.Char(3)
   dataPrevista DateTime?    @map("data_prevista") @db.Date
+  /// Slugs dos interesses escolhidos (ex.: ["natureza", "cultura"]). Array em
+  /// vez da tabela `usuario_interesses` do PDF: a lista é curta, não tem dado
+  /// por item e é sempre lida e gravada inteira. Os slugs válidos estão em
+  /// `interesses`; a aplicação filtra os desconhecidos antes de gravar.
+  interesses   String[]     @default([])
 
   usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
@@ -81,21 +85,7 @@ model Interesse {
   nome  String @unique
   icone String
 
-  usuarios UsuarioInteresse[]
-
   @@map("interesses")
-}
-
-/// N:N entre usuários e interesses.
-model UsuarioInteresse {
-  usuarioId   String @map("usuario_id") @db.Uuid
-  interesseId Int    @map("interesse_id")
-
-  usuario   Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  interesse Interesse @relation(fields: [interesseId], references: [id], onDelete: Cascade)
-
-  @@id([usuarioId, interesseId])
-  @@map("usuario_interesses")
 }
 
 // ─── Destinos e viagens ─────────────────────────────────────────────────

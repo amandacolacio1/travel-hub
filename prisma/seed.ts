@@ -49,21 +49,10 @@ async function semearUsuarioDemo() {
           perfilViagem: "SOZINHO",
           orcamentoMin: 5000,
           orcamentoMax: 12000,
+          interesses: ["natureza", "cultura"],
         },
       },
     },
-  });
-
-  const interesses = await prisma.interesse.findMany({
-    where: { slug: { in: ["natureza", "cultura"] } },
-  });
-
-  await prisma.usuarioInteresse.createMany({
-    data: interesses.map(({ id }) => ({
-      usuarioId: usuario.id,
-      interesseId: id,
-    })),
-    skipDuplicates: true,
   });
 
   console.log(`✔ usuário demo ${usuario.email}`);
