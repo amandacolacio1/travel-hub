@@ -6,10 +6,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button, Input, StepHeading } from "@/shared/components/ui";
 import { useSignInMutation } from "@/shared/session/use-session-mutations";
-import {
-  type LoginFormData,
-  loginSchema,
-} from "../schemas/login.schema";
+import { type LoginFormData, loginSchema } from "../schemas/login.schema";
 import { AuthIcon } from "./auth-icon";
 import { SocialAuth } from "./social-auth";
 
@@ -91,12 +88,6 @@ export function LoginForm() {
             className="rounded-lg bg-error-50 px-3.5 py-2.5 font-sans text-xs text-error-500"
           >
             {erroDeAcesso}
-          </p>
-        ) : null}
-
-        {process.env.NODE_ENV === "development" ? (
-          <p className="rounded-lg bg-surface-alt-500 px-3.5 py-2.5 font-sans text-xs text-text-muted-400">
-            Acesso de teste: <strong>amanda@travelhub.com</strong> / 12345678
           </p>
         ) : null}
 
